@@ -52,8 +52,7 @@ CREATE TABLE salario
     id SERIAL PRIMARY KEY,
     id_trabajador INTEGER REFERENCES trabajador(id),
     salario_actual NUMERIC(10,2) NOT NULL,
-    salario_anterior NUMERIC(10,2)
-    fecha_cambio DATE,
+    salario_anterior NUMERIC(10,2),
     estado INTEGER
 );
 /*ESTA PARTE ES PARA AYUDAR A CONTROLAR EL INVENTARIO*/
@@ -67,7 +66,7 @@ CREATE TABLE categoria_producto
 
 CREATE TABLE sub_categoria_producto(
     id SERIAL PRIMARY KEY,
-    id_categoria INTEGER REFERENCES categoria(id),
+    id_categoria INTEGER REFERENCES categoria_producto(id),
     nombre VARCHAR(250) NOT NUll,
     descripcion VARCHAR(250),
     estado INTEGER
@@ -76,7 +75,7 @@ CREATE TABLE sub_categoria_producto(
 CREATE TABLE marca
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(120) NOT NULL
+    nombre VARCHAR(120) NOT NULL,
     descripcion VARCHAR(250),
     estado INTEGER
 );
@@ -102,5 +101,9 @@ CREATE TABLE producto
 );
 
 CREATE TABLE precio(
-    id SERIAL PRIMARY KEY
+    id SERIAL PRIMARY KEY,
+    id_producto INTEGER REFERENCES producto(id),
+    precio_actual NUMERIC(10,2) NOT NULL,
+    precio_anterior NUMERIC(10,2) NOT NULL,
+    estado INTEGER
 );
