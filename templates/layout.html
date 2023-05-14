@@ -51,13 +51,13 @@
                         <ul class="collapse list-unstyled menu"
                             id="homeSubmenu1">
                             <li>
-                                <a href="#">Categoria</a>
+                                <a href="/categoria">Categoria</a>
                             </li>
                             <li>
-                                <a href="#">Sub categoria</a>
+                                <a href="/sub">Sub categoria</a>
                             </li>
                             <li>
-                                <a href="producto.html">Productos</a>
+                                <a href="/producto">Productos</a>
                             </li>
                         </ul>
                     </li>
@@ -101,7 +101,7 @@
 
             <!--------page-content---------------->
 
-            <div id="content">
+            <section id="content">
 
                 <!--top--navbar----design--------->
 
@@ -180,17 +180,25 @@
                         <!-- End XP Row -->
 
                     </div>
-
-
                 </section>
                 {% block main %}
                 <!-- Aquí puedes colocar el contenido que quieras mostrar en el bloque "main" -->
                 {% endblock %}
-            </main>
-            <script src="{{url_for('static', filename= 'js/jquery-3.3.1.slim.min.js')}}"></script>
-            <script src="{{url_for('static', filename= 'js/popper.min.js')}}"></script>
-            <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
-            <script src="{{url_for('static', filename='js/jquery-3.3.1.min.js')}}"></script>
-            <script src="{{url_for('static', filename='js/index.js')}}" ></script>
-        </body>
-    </html>
+                <footer class="footer">
+                    <div class="container-fluid">
+                        <div class="footer-in">
+                            <p class="mb-0">&copy Juan Jose Rios Huete.</p>
+                        </div>
+                    </div>
+                </footer>
+            </section>
+        </main>
+        <script src="{{url_for('static', filename=
+            'js/jquery-3.3.1.slim.min.js')}}"></script>
+        <script src="{{url_for('static', filename= 'js/popper.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+        <script src="{{url_for('static',
+            filename='js/jquery-3.3.1.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/index.js')}}"></script>
+    </body>
+</html>
