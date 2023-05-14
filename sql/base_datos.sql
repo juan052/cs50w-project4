@@ -55,7 +55,7 @@ CREATE TABLE salario
     salario_anterior NUMERIC(10,2),
     estado INTEGER
 );
-/*ESTA PARTE ES PARA AYUDAR A CONTROLAR EL INVENTARIO*/
+
 CREATE TABLE categoria_producto
 (
     id SERIAL PRIMARY KEY ,
@@ -72,28 +72,10 @@ CREATE TABLE sub_categoria_producto(
     estado INTEGER
 );
 
-CREATE TABLE marca
-(
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(120) NOT NULL,
-    descripcion VARCHAR(250),
-    estado INTEGER
-);
-
-
-CREATE TABLE unidad_medida (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(120) NOT NUll,
-    descripcion VARCHAR(250),
-    estado INTEGER
-);
-
 CREATE TABLE producto
 (
     id SERIAL PRIMARY KEY,
     id_sub_categoria INTEGER REFERENCES sub_categoria_producto(id),
-    id_marca INTEGER REFERENCES marca(id),
-    id_unidad_medida INTEGER REFERENCES unidad_medida(id),
     nombre VARCHAR(120) NOT NULL,
     descripcion varchar(250) NOT NULL,
     cantidad INTEGER NOT NUll,
@@ -106,4 +88,77 @@ CREATE TABLE precio(
     precio_actual NUMERIC(10,2) NOT NULL,
     precio_anterior NUMERIC(10,2) NOT NULL,
     estado INTEGER
+);
+
+
+CREATE TABLE servicios(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL,
+    descripcion VARCHAR(250),
+    estado INTEGER
+);
+
+
+Create table reservacion
+(
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(250),
+    fecha_de_entrega DATE,
+    foto VARCHAR(150),
+    precio NUMERIC,
+    estado INTEGER
+);
+
+
+CREATE TABLE tipo_venta (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(250) NOT NUll,
+    descripcion VARCHAR(250),
+    estado INTEGER
+);
+
+CREATE TABLE venta(
+    id SERIAL PRIMARY KEY,
+    id_tipo INTEGER REFERENCES tipo_venta(id),
+    id_cliente INTEGER REFERENCES clientes(id),
+    fecha DATE,
+    estado INTEGER
+);
+
+
+CREATE TABLE detalle_venta
+(
+    id SERIAL PRIMARY KEY,
+    id_producto INTEGER REFERENCES producto(id),
+    subtotal numeric NOT NUll,
+    descuento NUMERIC NOT NULL,
+    total NUMERIC NOT NULL
+);
+
+CREATE TABLE venta_personalizacion(
+    id SERIAL PRIMARY KEY,
+    id_reservacion INTEGER REFERENCES reservacion(id),
+    subtotal numeric NOT NUll,
+    descuento NUMERIC NOT NULL,
+    total NUMERIC NOT NULL
+);
+
+
+CREATE TABLE grupo_usuarios
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(120) NOT NULL,
+    descripcion VARCHAR(250) NOT NULL,
+    estado INTEGER 
+);
+
+
+CREATE TABLE usuario
+(
+    id SERIAL PRIMARY KEY,
+    id_grupo INTEGER REFERENCES grupo_usuarios(id),
+    id_persona INTEGER REFERENCES persona(id),
+    usuario VARCHAR(200) NOT NULL,
+    contraseña VARCHAR(250) NOT NULL,
+    estado INTEGER 
 );
