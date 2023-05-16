@@ -223,3 +223,10 @@ def eliminar_logo_antigua(filename):
     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.exists(path):
         os.remove(path)
+
+
+@app.route("/precio_producto",methods=["POST","GET"])
+def precio_producto():
+   Precios=Precio.query.options(joinedload(Precio.producto)).all()
+
+   return render_template("precio_producto.html",Precios=Precios)

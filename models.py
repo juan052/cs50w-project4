@@ -61,3 +61,10 @@ class Precio(db.Model):
     precio_actual = db.Column(db.Numeric(10,2), nullable=False)
     precio_anterior = db.Column(db.Numeric(10,2), nullable=False)
     estado = db.Column(db.Integer)
+    producto = relationship('Producto')
+    
+    def __init__(self,id_producto,precio_actual,precio_anterior,estado):
+        self.id_producto=id_producto
+        self.precio_actual=precio_actual
+        self.precio_anterior=precio_anterior
+        self.estado=estado
