@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import relationship
 db = SQLAlchemy()
 
 class CategoriaProducto(db.Model):
@@ -8,14 +9,13 @@ class CategoriaProducto(db.Model):
     nombre = db.Column(db.String(120), nullable=False)
     descripcion = db.Column(db.String(250))
     estado = db.Column(db.Integer)
+    
     def __init__(self, nombre, descripcion, estado):
         self.nombre = nombre
         self.descripcion = descripcion
         self.estado = estado
 
-    def insertar(self):
-        db.session.add(self)
-        db.session.commit()
+    
 
 class SubCategoriaProducto(db.Model):
     __tablename__ = 'sub_categoria_producto'
@@ -25,6 +25,12 @@ class SubCategoriaProducto(db.Model):
     nombre = db.Column(db.String(250), nullable=False)
     descripcion = db.Column(db.String(250))
     estado = db.Column(db.Integer)
+    categoria = relationship('CategoriaProducto')
+    def __init__(self, id_categoria, nombre, descripcion, estado):
+        self.id_categoria = id_categoria
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.estado = estado
 
 class Producto(db.Model):
     __tablename__ = 'producto'
