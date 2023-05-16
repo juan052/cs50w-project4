@@ -167,3 +167,46 @@ def producto_crear():
         return redirect(url_for('producto'))
     else:
         return redirect(url_for('producto'))
+    
+
+@app.route("/producto_actualizar/<int:producto_id>", methods=["GET", "POST"])
+def producto_actualizar(producto_id):
+    producto = Producto.query.get_or_404(producto_id)
+
+    if request.method == "POST":
+        id_sub_categoria = request.form.get('subcategoria')
+        nombre = request.form.get('nombre')
+        descripcion = request.form.get('descripcion')
+        cantidad = request.form.get('cantidad')
+        estado = request.form.get('estado')
+        logo = producto.logo
+
+        if 'foto' in request.files:
+            nueva_logo = request.files['foto']
+            if nueva_logo:
+                # Eliminar la imagen anterior si existe
+                if logo:
+                    eliminar_logo_antigua(logo)
+                
+                # Guardar la nueva imagen
+                filename = str(uuid.uuid4()) + secure_filename(nueva_logo.filename)
+                nueva_logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+
+        producto.id_sub_categoria = id_sub_categoria
+        producto.nombre = nombre
+        producto.descripcion = descripcion
+        producto.cantidad = cantidad
+        producto.logo = logo
+        producto.estado = estado
+
+        db.session.commit()
+        return redirect(url_for('producto'))
+    else:
+        return redirect(url_for('producto'))
+        
+
+def eliminar_logo_antigua(filename):
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(path):
+        os.remove(path)
