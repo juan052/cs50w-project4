@@ -1,6 +1,7 @@
 import os
 import datetime
 import requests
+import uuid
 from flask import Flask, session, redirect, url_for, render_template, request, flash,jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -18,12 +19,23 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SESSION_PERMANENT"] = False
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-app.config['UPLOAD_FOLDER'] = 'static/img/user'
+app.config['UPLOAD_FOLDER'] = 'static/img/imagenes'
 Session(app)
 db.init_app(app)
 
 engine = create_engine(os.getenv("DATABASE_URL"))
 db_session = scoped_session(sessionmaker(bind=engine))
+# Subir foto al servidor
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return filename
+    else:
+        return 'No se proporcionó ningún archivo'
+    
 
 # Inicio
 @app.route("/")
@@ -126,5 +138,32 @@ def eliminar_sub():
 
 @app.route("/producto", methods=["GET", "POST"])
 def producto():
+    
+    producto = Producto.query.options(joinedload(Producto.subcategoria).joinedload(SubCategoriaProducto.categoria)).all()
+    subcategorias = SubCategoriaProducto.query.options(joinedload(SubCategoriaProducto.categoria)).all()
+    return render_template("producto.html", producto=producto,subcategorias=subcategorias)
 
-    return render_template("producto.html")
+
+@app.route("/producto_crear", methods=["GET","POST"])
+def producto_crear():
+    if request.method == "POST":
+        id_sub_categoria=request.form.get('subcategoria')
+        nombre = request.form.get('nombre')
+        descripcion= request.form.get('descripcion')
+        cantidad=request.form.get('cantidad')
+        estado = request.form.get('estado')
+        logo = None
+        if 'foto' in request.files:
+            logo = request.files['foto']
+            print(logo)
+            if logo:
+                filename = str(uuid.uuid4()) + secure_filename(logo.filename)
+                logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+        print(logo)
+        producto=Producto(id_sub_categoria=id_sub_categoria, nombre=nombre, descripcion=descripcion, cantidad=cantidad,logo=logo, estado=estado)
+        db.session.add(producto)
+        db.session.commit()
+        return redirect(url_for('producto'))
+    else:
+        return redirect(url_for('producto'))

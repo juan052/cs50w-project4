@@ -79,6 +79,7 @@ CREATE TABLE producto
     nombre VARCHAR(120) NOT NULL,
     descripcion varchar(250) NOT NULL,
     cantidad INTEGER NOT NUll,
+    logo VARCHAR(250),
     estado INTEGER
 );
 
@@ -129,6 +130,7 @@ CREATE TABLE venta(
 CREATE TABLE detalle_venta
 (
     id SERIAL PRIMARY KEY,
+    id_venta INTEGER REFERENCES venta(id),
     id_producto INTEGER REFERENCES producto(id),
     subtotal numeric NOT NUll,
     descuento NUMERIC NOT NULL,
@@ -137,6 +139,7 @@ CREATE TABLE detalle_venta
 
 CREATE TABLE venta_personalizacion(
     id SERIAL PRIMARY KEY,
+    id_venta INTEGER REFERENCES venta(id),
     id_reservacion INTEGER REFERENCES reservacion(id),
     subtotal numeric NOT NUll,
     descuento NUMERIC NOT NULL,

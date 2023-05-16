@@ -26,6 +26,7 @@ class SubCategoriaProducto(db.Model):
     descripcion = db.Column(db.String(250))
     estado = db.Column(db.Integer)
     categoria = relationship('CategoriaProducto')
+    
     def __init__(self, id_categoria, nombre, descripcion, estado):
         self.id_categoria = id_categoria
         self.nombre = nombre
@@ -40,7 +41,17 @@ class Producto(db.Model):
     nombre = db.Column(db.String(120), nullable=False)
     descripcion = db.Column(db.String(250), nullable=False)
     cantidad = db.Column(db.Integer, nullable=False)
+    logo=db.Column(db.String(250), nullable=False)
     estado = db.Column(db.Integer)
+    subcategoria = relationship('SubCategoriaProducto')
+    
+    def __init__(self, id_sub_categoria, nombre, descripcion, cantidad,logo, estado):
+        self.id_sub_categoria = id_sub_categoria
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.cantidad = cantidad
+        self.logo=logo
+        self.estado = estado
 
 class Precio(db.Model):
     __tablename__ = 'precio'
