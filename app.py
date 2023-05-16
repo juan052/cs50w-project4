@@ -204,7 +204,20 @@ def producto_actualizar(producto_id):
         return redirect(url_for('producto'))
     else:
         return redirect(url_for('producto'))
-        
+
+@app.route("/eliminar_producto", methods=["POST"])
+def eliminar_producto():
+    producto_id = request.form.get("id")
+    print(producto_id)
+    productos = Producto.query.get(producto_id)
+    
+    if productos:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+        productos.estado = 2
+        db.session.commit()
+
+    return redirect(url_for('producto'))
+
 
 def eliminar_logo_antigua(filename):
     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
