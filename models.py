@@ -68,3 +68,32 @@ class Precio(db.Model):
         self.precio_actual=precio_actual
         self.precio_anterior=precio_anterior
         self.estado=estado
+
+
+
+
+class Persona(db.Model):
+    __tablename__='persona'
+    id=db.Column(db.Integer, primary_key=True)
+    nombre=db.Colum(db.String(120),nullable=False)
+    correo=db.Colum(db.String(250),nullable=False)
+    direccion=db.Colum(db.String(250),nullable=True)
+    celular=db.Colum(db.Integer)
+
+    def __init__(self,nombre,correo,direccion,celular):
+        self.nombre=nombre
+        self.correo=correo
+        self.direccion=direccion
+        self.celular=celular
+
+
+class PersonaNatural(db.Model):
+    __table__='persona_natural'
+    id=db.Column(db.Integer,primary_key=True)
+    id_persona=db.Column(db.Integer, db.ForeignKey('persona.id'))
+    apellido=db.Column(db.String(250),nullable=False)
+    cedula=db.Colum(db.String(80),nullable=False)
+    fecha_nacmiento=db.Colum(db.Date,nullable=False)
+    genero=db.Colum(db.String,nullable=True)
+
+
