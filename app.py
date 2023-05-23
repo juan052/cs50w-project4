@@ -267,3 +267,25 @@ def actualizar_precio(id):
         return redirect(url_for('precio_producto'))
     else:
         return redirect(url_for('precio_Producto'))
+    
+
+@app.route("/login",methods=["GET","POST"])
+def login():
+  
+    return render_template("login.html")
+
+@app.route("/validar",methods=["GET","POST"])
+def validar():
+    if request.method == "POST":
+        usuario=request.form.get('usuario')
+        contraseña = request.form.get('contraseña')
+        if usuario == "admin" and contraseña == "admin":
+            return redirect(url_for('producto'))
+            print("El usuario y la contraseña son válidos. Acceso concedido.")
+        else:
+            print("El usuario y/o la contraseña son incorrectos. Acceso denegado.")
+       
+        return redirect(url_for('login'))
+    else:
+       return render_template("login.html")
+
