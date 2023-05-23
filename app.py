@@ -228,5 +228,42 @@ def eliminar_logo_antigua(filename):
 @app.route("/precio_producto",methods=["POST","GET"])
 def precio_producto():
    Precios=Precio.query.options(joinedload(Precio.producto)).all()
+   productos = Producto.query.options(joinedload(Producto.subcategoria).joinedload(SubCategoriaProducto.categoria)).all()
 
-   return render_template("precio_producto.html",Precios=Precios)
+   return render_template("precio_producto.html",Precios=Precios,productos=productos)
+
+
+
+@app.route("/crear_precio",methods=["GET","POST"])
+def crear_precio():
+    if request.method == "POST":
+        id_producto=request.form.get('producto')
+        precio_actual = request.form.get('precio_actual')
+        estado=request.form.get('estado')
+        precio = Precio(id_producto=id_producto, precio_actual=precio_actual, precio_anterior=0, estado=estado)
+        db.session.add(precio)
+        db.session.commit()
+
+        return redirect(url_for('precio_producto'))
+    else:
+        return redirect(url_for('precio_producto'))
+    
+
+
+@app.route("/actualizar_precio/<int:id>",methods=["GET","POST"])
+def actualizar_precio(id):
+    precio = Precio.query.get(id)
+    if request.method == "POST":
+        
+        precio_actual = request.form.get('precio_actual')
+        precio_anterior=request.form.get('precio_anterior')
+        estado=request.form.get('estado')
+       
+      
+        precio.precio_actual=precio_actual
+        precio.precio_anterior=precio_anterior
+        precio.estado=estado
+        db.session.commit()
+        return redirect(url_for('precio_producto'))
+    else:
+        return redirect(url_for('precio_Producto'))

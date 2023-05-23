@@ -71,29 +71,67 @@ class Precio(db.Model):
 
 
 
-
 class Persona(db.Model):
-    __tablename__='persona'
-    id=db.Column(db.Integer, primary_key=True)
-    nombre=db.Colum(db.String(120),nullable=False)
-    correo=db.Colum(db.String(250),nullable=False)
-    direccion=db.Colum(db.String(250),nullable=True)
-    celular=db.Colum(db.Integer)
+    __tablename__ = 'persona'
 
-    def __init__(self,nombre,correo,direccion,celular):
-        self.nombre=nombre
-        self.correo=correo
-        self.direccion=direccion
-        self.celular=celular
-
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(150), nullable=False)
+    correo = db.Column(db.String(150), nullable=False)
+    direccion = db.Column(db.String(250), nullable=False)
+    celular = db.Column(db.Integer)
 
 class PersonaNatural(db.Model):
-    __table__='persona_natural'
-    id=db.Column(db.Integer,primary_key=True)
-    id_persona=db.Column(db.Integer, db.ForeignKey('persona.id'))
-    apellido=db.Column(db.String(250),nullable=False)
-    cedula=db.Colum(db.String(80),nullable=False)
-    fecha_nacmiento=db.Colum(db.Date,nullable=False)
-    genero=db.Colum(db.String,nullable=True)
+    __tablename__ = 'persona_natural'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
+    apellido = db.Column(db.String(250), nullable=False)
+    cedula = db.Column(db.String(80))
+    fecha_nacimiento = db.Column(db.Date)
+    genero = db.Column(db.CHAR)
+
+class PersonaJuridica(db.Model):
+    __tablename__ = 'persona_juridica'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
+    ruc = db.Column(db.String(250), nullable=False)
+    razon_social = db.Column(db.String(250))
+    fecha_constitucional = db.Column(db.Date)
+
+class Clientes(db.Model):
+    __tablename__ = 'clientes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
+    tipo_cliente = db.Column(db.String(250), nullable=False)
+    foto = db.Column(db.String(250))
+    estado = db.Column(db.Integer)
+
+class EstadoCivil(db.Model):
+    __tablename__ = 'estado_civil'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(150), nullable=False)
+    descripcion = db.Column(db.String(250))
+
+class Trabajador(db.Model):
+    __tablename__ = 'trabajador'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
+    id_estado_civil = db.Column(db.Integer, db.ForeignKey('estado_civil.id'))
+    foto = db.Column(db.String(250))
+    estado = db.Column(db.Integer)
+
+class Salario(db.Model):
+    __tablename__ = 'salario'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_trabajador = db.Column(db.Integer, db.ForeignKey('trabajador.id'))
+    salario_actual = db.Column(db.Numeric(10,2), nullable=False)
+    salario_anterior = db.Column(db.Numeric(10,2))
+    estado = db.Column(db.Integer)
+
 
 

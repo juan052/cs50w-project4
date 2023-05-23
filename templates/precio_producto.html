@@ -29,7 +29,7 @@
                             class="btn btn-success"
                             data-toggle="modal">
                             <i class="material-icons">&#xE147;</i>
-                            <span>Agregar productos</span></a>
+                            <span>Asignar precios</span></a>
                     </div>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                     <tr>
                         <th>Producto</th>
                         <th>Precio actual</th>
-                        <th>Precio Anterior</th>
+                        <th>Precio anterior</th>
                         <th>Estado</th>
                         <th>Action</th>
                     </tr>
@@ -50,7 +50,6 @@
                         <td>{{ productos.producto.nombre }}</td>
                         <td>{{ productos.precio_actual }}</td>
                         <td>{{ productos.precio_anterior }}</td>
-                        <td>{{ productos.descripcion }}</td>
                         <td>
                             {% if productos.estado == 1 %}
                             Activo
@@ -81,7 +80,7 @@
         <div id="addEmployeeModal" class="modal fade">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form action="/precio_crear" method="post"
+                    <form action="/crear_precio" method="post"
                         enctype="multipart/form-data">
                         <div class="modal-header">
                             <h4 class="modal-title">Asignar precio</h4>
@@ -91,44 +90,31 @@
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                                <label>Categoria</label>
-                                <select name="subcategoria" id=""
+                                <label>Producto: </label>
+                                <select name="producto" id="producto"
                                     class="form-control">
-                                    {% for subcategoria in subcategorias %}
-                                    <optgroup label="{{
-                                        subcategoria.categoria.nombre }}">
-                                        <option value="{{ subcategoria.id }}">{{
-                                            subcategoria.nombre }}</option>
+                                    {% for productos in productos %}
+                                    <optgroup
+                                        label="{{ productos.subcategoria.categoria.nombre }}">
+                                        <optgroup
+                                            label="{{ productos.subcategoria.nombre }}">
+                                            <option value="{{ productos.id }}">{{
+                                                productos.nombre }}</option>
+                                        </optgroup>
                                     </optgroup>
+
                                     {% endfor %}
                                 </select>
 
                             </div>
                             <div class="form-group">
-                                <label>Nombre</label>
-                                <input type="text" name="nombre"
+                                <label>Nuevo precio</label>
+                                <input type="text" name="precio_actual"
                                     class="form-control"
                                     required>
                             </div>
-                            <div class="form-group">
-                                <label>descripcion</label>
-                                <textarea name="descripcion"
-                                    class="form-control"
-                                    required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Cantidad</label>
-                                <input type="text" name="cantidad"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <label>Foto</label>
-                                <input type="file" name="foto"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <select name="estado" id=""
+
+                            <select name="estado" id
                                 class="form-control">
                                 <option value="1">Activo</option>
                                 <option value="2">Inactivo</option>
@@ -140,77 +126,45 @@
                                 data-dismiss="modal"
                                 value="Cancel">
                             <input type="submit" class="btn
-                                btn-success" value="Add">
+                                btn-success" value="Asignar">
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-        {% for productos in producto %}
+        {% for productos in Precios %}
         <!-- Edit Modal HTML -->
         <div id="editEmployeeModal{{productos.id}}" class="modal fade">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form action="/producto_actualizar/{{productos.id}}" method="post"  enctype="multipart/form-data" >
+                    <form action="/actualizar_precio/{{productos.id}}"
+                        method="post" enctype="multipart/form-data">
                         <div class="modal-header">
-                            <h4 class="modal-title">Editar producto</h4>
+                            <h4 class="modal-title">Editar precios</h4>
                             <button type="button" class="close"
                                 data-dismiss="modal"
                                 aria-hidden="true">&times;</button>
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                                <label>Categoria</label>
-                                <select name="subcategoria" id=""
-                                    class="form-control">
-                                    {% for subcategoria in subcategorias %}
-                                    <optgroup label="{{
-                                        subcategoria.categoria.nombre }}">
-                                        <option value="{{subcategoria.id}}" {%
-                                            if subcategoria.id ==
-                                            subcategoria.id %}selected{% endif
-                                            %}>{{subcategoria.nombre}}</option>
-                                    </optgroup>
-                                    {% endfor %}
-                                </select>
-
+                                <label>Producto: </label>
+                                <input type="text" value="{{productos.id_producto}}" hidden>
+                                <input type="text" class="form-control" value="{{productos.producto.nombre}}" disabled>
                             </div>
 
+                           
                             <div class="form-group">
-                                <label>Nombre</label>
-                                <input type="text" name="nombre"
+                                <label>Nuevo precio</label>
+                                <input type="number" name="precio_actual"
                                     class="form-control"
-                                    required value="{{productos.nombre}}">
-                            </div>
-                            <div class="form-group">
-                                <label>descripcion</label>
-                                <textarea name="descripcion"
+                                     value="" required>
+                                <input type="number" name="precio_anterior"
                                     class="form-control"
-                                    required>{{productos.descripcion}}</textarea>
+                                     value="{{productos.precio_actual}}" hidden>
                             </div>
+                           
                             <div class="form-group">
-                                <label>Cantidad</label>
-                                <input type="number" name="cantidad"
-                                    class="form-control"
-                                    required value="{{productos.cantidad}}">
-                            </div>
-                            <div class="form-group">
-                                
-                                {% if productos.logo %}
-                                <label>Foto anterior</label>
-                                <img src="{{ url_for('static',
-                                    filename='img/imagenes/' + productos.logo)
-                                    }}" alt="Foto actual" width="50">
-                                {% endif %}
-
-                                <label>Foto nueva</label>
-                                <input type="file" name="foto"
-                                    class="form-control"
-                                    required
-                                    value="/static/img/imagenes/{{productos.logo}}">
-                            </div>
-                            <div class="form-group">
-                                <select name="estado" id=""
+                                <select name="estado" id
                                     class="form-control">
                                     <option value="1" {% if productos.estado ==
                                         1 %}selected{% endif %}>Activo</option>
@@ -241,13 +195,14 @@
                     <form action="/eliminar_producto" method="post">
                         <div class="modal-header">
                             <h4 class="modal-title">Eliminar producto</h4>
-                             
+
                             <button type="button" class="close"
                                 data-dismiss="modal"
                                 aria-hidden="true">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <input type="number" name="id" value="{{ productos.id }}" hidden>
+                            <input type="number" name="id"
+                                value="{{ productos.id }}" hidden>
 
                             <p>estas?</p>
                             <p class="text-warning"><small>This
@@ -267,11 +222,9 @@
             </div>
         </div>
 
-
     </div>
     {% endfor %}
     <!---footer---->
-
 
 </div>
 {% endblock %}

@@ -87,7 +87,7 @@ CREATE TABLE precio(
     id SERIAL PRIMARY KEY,
     id_producto INTEGER REFERENCES producto(id),
     precio_actual NUMERIC(10,2) NOT NULL,
-    precio_anterior NUMERIC(10,2) NOT NULL,
+    precio_anterior NUMERIC(10,2),
     estado INTEGER
 );
 
