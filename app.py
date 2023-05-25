@@ -40,8 +40,23 @@ def upload():
 # Inicio
 @app.route("/")
 def index():
-    return render_template('inicio.html')
+    Precios=Precio.query.options(joinedload(Precio.producto)).limit(4).all()
+    return render_template('index.html', Precios=Precios)
 
+
+@app.route("/acerca")
+def acerca():
+    
+    return render_template('about.html')
+
+@app.route("/shop")
+def shop():
+    Precios=Precio.query.options(joinedload(Precio.producto)).all()
+    return render_template('shop.html', Precios=Precios)
+
+@app.route("/inicio")
+def inicio():
+    return render_template('inicio.html')
 
 
 @app.route("/categoria")
@@ -267,7 +282,11 @@ def actualizar_precio(id):
         return redirect(url_for('precio_producto'))
     else:
         return redirect(url_for('precio_Producto'))
-    
+
+@app.route("/trabajador",methods=["GET","POST"])
+def trabajador():
+    estado=EstadoCivil.query.all()
+    return render_template("trabajador.html",estado=estado)    
 
 @app.route("/login",methods=["GET","POST"])
 def login():
@@ -280,7 +299,7 @@ def validar():
         usuario=request.form.get('usuario')
         contraseña = request.form.get('contraseña')
         if usuario == "admin" and contraseña == "admin":
-            return redirect(url_for('producto'))
+            return redirect(url_for('inicio'))
             print("El usuario y la contraseña son válidos. Acceso concedido.")
         else:
             print("El usuario y/o la contraseña son incorrectos. Acceso denegado.")

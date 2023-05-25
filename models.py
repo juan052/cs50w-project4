@@ -89,6 +89,7 @@ class PersonaNatural(db.Model):
     cedula = db.Column(db.String(80))
     fecha_nacimiento = db.Column(db.Date)
     genero = db.Column(db.CHAR)
+    persona = relationship('Persona')
 
 class PersonaJuridica(db.Model):
     __tablename__ = 'persona_juridica'
@@ -98,6 +99,7 @@ class PersonaJuridica(db.Model):
     ruc = db.Column(db.String(250), nullable=False)
     razon_social = db.Column(db.String(250))
     fecha_constitucional = db.Column(db.Date)
+    persona = relationship('Persona')
 
 class Clientes(db.Model):
     __tablename__ = 'clientes'
@@ -107,6 +109,7 @@ class Clientes(db.Model):
     tipo_cliente = db.Column(db.String(250), nullable=False)
     foto = db.Column(db.String(250))
     estado = db.Column(db.Integer)
+    persona = relationship('Persona')
 
 class EstadoCivil(db.Model):
     __tablename__ = 'estado_civil'
@@ -114,6 +117,10 @@ class EstadoCivil(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(150), nullable=False)
     descripcion = db.Column(db.String(250))
+    def __init__(self,id,nombre,descripcion):
+        self.id=id
+        self.nombre=nombre
+        self.descripcion=descripcion
 
 class Trabajador(db.Model):
     __tablename__ = 'trabajador'
