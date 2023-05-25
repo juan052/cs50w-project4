@@ -79,6 +79,13 @@ class Persona(db.Model):
     correo = db.Column(db.String(150), nullable=False)
     direccion = db.Column(db.String(250), nullable=False)
     celular = db.Column(db.Integer)
+    persona_natural = db.relationship('PersonaNatural', uselist=False)
+    def __init__(self, nombre, correo, direccion, celular=None):
+        self.nombre = nombre
+        self.correo = correo
+        self.direccion = direccion
+        self.celular = celular
+
 
 class PersonaNatural(db.Model):
     __tablename__ = 'persona_natural'
@@ -89,7 +96,15 @@ class PersonaNatural(db.Model):
     cedula = db.Column(db.String(80))
     fecha_nacimiento = db.Column(db.Date)
     genero = db.Column(db.CHAR)
-    persona = relationship('Persona')
+    persona = relationship('Persona', back_populates='persona_natural')
+
+    def __init__(self, id_persona, apellido, cedula, fecha_nacimiento, genero):
+        self.id_persona = id_persona
+        self.apellido = apellido
+        self.cedula = cedula
+        self.fecha_nacimiento = fecha_nacimiento
+        self.genero = genero
+
 
 class PersonaJuridica(db.Model):
     __tablename__ = 'persona_juridica'
@@ -101,6 +116,8 @@ class PersonaJuridica(db.Model):
     fecha_constitucional = db.Column(db.Date)
     persona = relationship('Persona')
 
+
+
 class Clientes(db.Model):
     __tablename__ = 'clientes'
 
@@ -111,25 +128,25 @@ class Clientes(db.Model):
     estado = db.Column(db.Integer)
     persona = relationship('Persona')
 
-class EstadoCivil(db.Model):
-    __tablename__ = 'estado_civil'
+    def __init__(self, id_persona, tipo_cliente, foto=None, estado=None):
+        self.id_persona = id_persona
+        self.tipo_cliente = tipo_cliente
+        self.foto = foto
+        self.estado = estado
 
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(150), nullable=False)
-    descripcion = db.Column(db.String(250))
-    def __init__(self,id,nombre,descripcion):
-        self.id=id
-        self.nombre=nombre
-        self.descripcion=descripcion
 
 class Trabajador(db.Model):
     __tablename__ = 'trabajador'
 
     id = db.Column(db.Integer, primary_key=True)
     id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
-    id_estado_civil = db.Column(db.Integer, db.ForeignKey('estado_civil.id'))
     foto = db.Column(db.String(250))
     estado = db.Column(db.Integer)
+    persona = relationship('Persona')
+    def __init__(self,id_persona,foto,estado):
+        self.id_persona=id_persona
+        self.foto=foto
+        self.estado=estado
 
 class Salario(db.Model):
     __tablename__ = 'salario'

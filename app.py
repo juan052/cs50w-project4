@@ -285,8 +285,55 @@ def actualizar_precio(id):
 
 @app.route("/trabajador",methods=["GET","POST"])
 def trabajador():
-    estado=EstadoCivil.query.all()
-    return render_template("trabajador.html",estado=estado)    
+    trabajadores = Trabajador.query.options(joinedload(Trabajador.persona)).all()
+    return render_template("trabajador.html", trabajadores=trabajadores) 
+
+
+@app.route("/crear_trabajador",methods=["GET","POST"])
+def crear_trabajador():
+    if request.method == "POST":
+        nombre=request.form.get('nombre')
+        apellido = request.form.get('apellido')
+        cedula=request.form.get('cedula')
+        fecha=request.form.get('fecha_nacimiento')
+        correo=request.form.get('correo')
+        direccion=request.form.get('direccion')
+        genero=request.form.get('genero')
+        celular=request.form.get('celular')
+        estado=request.form.get('estado')
+        logo = None
+        if 'foto' in request.files:
+            logo = request.files['foto']
+            print(logo)
+            if logo:
+                filename = str(uuid.uuid4()) + secure_filename(logo.filename)
+                logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+        print(logo)
+        persona=Persona(nombre=nombre,correo=correo,direccion=direccion,celular=celular)
+        db.session.add(persona)
+        db.session.commit()
+        id_persona=persona.id
+        personanat=PersonaNatural(id_persona=id_persona,apellido=apellido,cedula=cedula,fecha_nacimiento=fecha,genero=genero)
+        db.session.add(personanat)
+        db.session.commit()
+        colaborador=Trabajador(id_persona=id_persona,foto=logo,estado=estado)
+        db.session.add(colaborador)
+        db.session.commit()
+        return redirect(url_for('trabajador'))
+    else:
+        return redirect(url_for('trabajador')) 
+
+
+
+
+
+
+#Usuarios
+@app.route("/usuarios",methods=["GET","POST"])
+def usuarios():
+    return render_template("usuarios.html")
+
 
 @app.route("/login",methods=["GET","POST"])
 def login():

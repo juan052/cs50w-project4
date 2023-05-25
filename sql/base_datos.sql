@@ -30,18 +30,12 @@ CREATE TABLE clientes (
     foto VARCHAR(250) ,
     estado INTEGER
 );
-CREATE TABLE estado_civil
-(
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
-    descripcion VARCHAR(250)
-);
+
 
 CREATE TABLE trabajador
 (
     id SERIAL primary key,
     id_persona INTEGER REFERENCES persona(id),
-    id_estado_civil INTEGER REFERENCES estado_civil(id),
     foto VARCHAR(250) ,
     estado INTEGER 
 );
