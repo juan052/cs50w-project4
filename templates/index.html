@@ -115,7 +115,7 @@
 				<div class="inbox">
 					<div>
 						<a href="#" class="price">C${{ productos.precio_actual }}</a>
-                        <a href="" class="price">Agregar al carrito</a>
+                    
 					</div>
 					<div class="rating">
 						<a href="#"><i class="ri-star-fill"></i></a>
@@ -148,48 +148,37 @@
 	<section class="contact">
 		<div class="main-contact">
 			<div class="contact-content">
-				<h4>Getting started</h4>
+				<h5>Navegacion</h5>
 				<ul>
-					<li><a href="#">Release Notes</a></li>
-					<li><a href="#">Upgrade Guide</a></li>
-					<li><a href="#">Browser Support</a></li>
-					<li><a href="#">Dark Mode</a></li>
+					<li><a href="/">Inicio</a></li>
+					<li><a href="/acerca">Acerca de</a></li>
+					<li><a href="/producto">Productos</a></li>
+				</ul>
+			</div>
+
+			<div class="contact-content">
+				<h5>Redes sociales</h5>
+				<ul>
+					<li><a href="https://www.instagram.com/luxx.art.cfts/" target="_blank">Instragram</a></li>
+					<li><a href="https://www.facebook.com/gomez.1624" target="_blank">Facebook</a></li>
+					<li><a href="">Whatsapp</a></li>
+					
 				</ul>
 				
 			</div>
 
 			<div class="contact-content">
-				<h5>Explore</h5>
+				<h5>Politicas y privacidad</h5>
 				<ul>
-					<li><a href="#">Prototyping</a></li>
-					<li><a href="#">Design systems</a></li>
-					<li><a href="#">Pricing</a></li>
-					<li><a href="#">Security</a></li>
+					<li><a href="#">Politicas y privacidad</a></li>
+					<li><a href="#">Termino y condiciones</a></li>
+					<li><a href="#">Cokies</a></li>
+					
 				</ul>
 				
 			</div>
 
-			<div class="contact-content">
-				<h5>Resources</h5>
-				<ul>
-					<li><a href="#">Best practices</a></li>
-					<li><a href="#">Support</a></li>
-					<li><a href="#">Developers</a></li>
-					<li><a href="#">Learn design</a></li>
-				</ul>
-				
-			</div>
-
-			<div class="contact-content">
-				<h5>Community</h5>
-				<ul>
-					<li><a href="#">Discussion Forums</a></li>
-					<li><a href="#">Code of Conduct</a></li>
-					<li><a href="#">Contributing</a></li>
-					<li><a href="#">API Reference</a></li>
-				</ul>
-				
-			</div>
+			
 
 		</div>
 	</section>
@@ -202,7 +191,7 @@
 	<script src="https://unpkg.com/scrollreveal"></script>
 
 	<!---custom js link--->
-	<script type="text/javascript" src="js/script.js"></script>
+	<script type="text/javascript" src="{{url_for('static', filename= 'js/script.js')}}"></script>
 
 </body>
 </html>

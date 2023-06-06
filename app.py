@@ -355,3 +355,84 @@ def validar():
     else:
        return render_template("login.html")
 
+def obtener_productos():
+    productos = Producto.query.all()
+    lista_productos = []
+    
+    for producto in productos:
+        precio = Precio.query.filter_by(id_producto=producto.id).first()
+        precio_actual = precio.precio_actual if precio else None
+        lista_productos.append({
+            'id': producto.id,
+            'nombre': producto.nombre,
+            'precio': precio_actual,
+            'logo': producto.logo
+        })
+    
+    return lista_productos
+
+
+
+@app.route('/agregar', methods=['POST'])
+def agregar():
+    carrito = session.get('carrito', [])
+    
+    for key, value in request.form.items():
+        if key.startswith('producto_id_'):
+            producto_id = int(value)
+            cantidad_key = 'cantidad_' + key.split('_')[2]  # Obtiene la clave específica de cantidad
+            cantidad = int(request.form.get(cantidad_key, 1))
+            
+            for item in carrito:
+                if item['id'] == producto_id:
+                    item['cantidad'] += cantidad
+                    break
+            else:
+                producto = {'id': producto_id, 'cantidad': cantidad}
+                carrito.append(producto)
+    print(cantidad)
+    session['carrito'] = carrito
+    return redirect('/shop')
+
+
+
+# Ruta para mostrar el carrito
+@app.route("/card", methods=["GET", "POST"])
+def card():
+    carrito = session.get('carrito', [])
+    productos = obtener_productos()
+
+    carrito_actualizado = []
+    for item in carrito:
+        for producto in productos:
+            if producto['id'] == item['id']:
+                item_actualizado = {
+                    'id': item['id'],
+                    'nombre': producto['nombre'],
+                    'precio': producto['precio'],
+                    'logo': producto['logo'],
+                    'cantidad': item['cantidad'] 
+                }
+                carrito_actualizado.append(item_actualizado)
+                break
+
+    print(carrito_actualizado)
+    return render_template("card.html", carrito=carrito_actualizado)
+
+
+
+# Ruta para eliminar productos del carrito
+@app.route('/eliminar/<int:producto_id>')
+def eliminar(producto_id):
+    carrito = session.get('carrito', [])
+    
+    # Buscamos el producto en el carrito y lo eliminamos
+    for item in carrito:
+        if item['id'] == producto_id:
+            carrito.remove(item)
+            break
+    
+    # Actualizamos el carrito en la sesión
+    session['carrito'] = carrito
+    
+    return redirect('/card')

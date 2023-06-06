@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Luxx Art</title>
+
+        <link
+            href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
+            rel="stylesheet">
+
+        <link rel="stylesheet"
+            href="https://unpkg.com/boxicons@latest/css/boxicons.min.css">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+        <!----css3---->
+        <link rel="stylesheet" href="/static/css/custom.css">
+        <link rel="stylesheet" type="text/css" href="/static/css/style2.css">
+    </head>
+    <body>
+        <style>
+            *{
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	font-family: 'Poppins', sans-serif;
+	text-decoration: none;
+	list-style: none;
+}
+:root{
+	--bg-color: #ffffff;
+	--text-color: #0f172a;
+	--main-color: #6b7280;
+	--other-color: #334155;
+	--big-font: 4.3rem;
+	--h2-font: 2.2rem;
+	--p-font: 1rem;
+}
+body{
+	color: var(--text-color);
+	background: var(--bg-color);
+}
+            header{
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: transparent;
+            padding: 17px 11%;
+            border-bottom: 1px solid #f7f9fb;
+            transition: all .45s ease;
+        }
+        .logo img{
+            width: 15%;
+            height: 15%;
+        }
+        .navbar{
+            display: flex;
+        }
+        .navbar a{
+            font-size: var(--p-font);
+            color: var(--other-color);
+            font-weight: 400;
+            padding: 10px 25px;
+            margin: 0 5px;
+            background: transparent;
+            border-radius: 30px;
+            transition: all .45s ease;
+        }
+        .navbar a:hover{
+            background: #f7f9fb;
+        }
+        .navbar a.active{
+            background: #f7f9fb;
+        }
+        header.sticky{
+	background: var(--bg-color);
+	padding: 14px 11%;
+}
+        </style>
+        <header>
+            <ul class="navbar1">
+                <li><a href="/" class="active">Seguir comprando</a></li>
+            </ul>
+            <div class="icons">
+                <a href="/login"><i class="ri-user-line"></i></a>
+                <a href><i class="ri-shopping-cart-line"></i></a>
+                <div class="bx bx-menu" id="menu-icon"></div>
+            </div>
+        </header>
+        <!----home section design---->
+        <br>
+        <br>
+        <section class="product">
+            <div class="middle-text">
+                <h3>Difruta tu compra. <span>También puedes personalizar tu
+                        pedido</span></h3>
+            </div>
+            <table class="table table-sm" id="datatable_users">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Foto</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Sub total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in carrito %}
+                    <tr>
+                        <td><img src="/static/img/imagenes/{{ item.logo }}" alt
+                                width="50"></td>
+                        <td>{{ item.nombre }}</td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <input type="number"
+                                    class="form-control form-control-sm cantidad-input"
+                                    value="{{ item.cantidad }}" min="1">
+                            </div>
+                        </td>
+                        <td>{{ item.precio }}</td>
+                        <td><span class="subtotal" id="subtotal{{ loop.index }}">{{
+                                item.precio * item.cantidad }}</span></td>
+
+                        <td><a href="/eliminar/{{ item.id }}">Eliminar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="row mt-4">
+                <div class="col-12 text-end">
+                  <strong>Total:</strong> <span id="total" class="d-inline-block fs-4">c$ 0.00</span>
+                </div>
+              </div>
+        </section>
+
+        <section class="contact">
+            <div class="main-contact">
+                <div class="contact-content">
+                    <h5>Navegacion</h5>
+                    <ul>
+                        <li><a href="/">Inicio</a></li>
+                        <li><a href="/acerca">Acerca de</a></li>
+                        <li><a href="/producto">Productos</a></li>
+                    </ul>
+                </div>
+
+                <div class="contact-content">
+                    <h5>Redes sociales</h5>
+                    <ul>
+                        <li><a href="https://www.instagram.com/luxx.art.cfts/"
+                                target="_blank">Instagram</a></li>
+                        <li><a href="https://www.facebook.com/gomez.1624"
+                                target="_blank">Facebook</a></li>
+                        <li><a href="https://wa.me/telefono">Whatsapp</a></li>
+                    </ul>
+                </div>
+
+                <div class="contact-content">
+                    <h5>Políticas y privacidad</h5>
+                    <ul>
+                        <li><a href="#">Políticas y privacidad</a></li>
+                        <li><a href="#">Términos y condiciones</a></li>
+                        <li><a href="#">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <div class="end-text">
+            <p>© 2023 All Rights Reserved by Luxx</p>
+        </div>
+
+        <script src="https://unpkg.com/scrollreveal"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script>
+
+$(document).ready(function() {
+  // Obtener todos los elementos con la clase 'cantidad-input'
+  $('.cantidad-input').change(function() {
+    var row = $(this).closest('tr'); // Obtener la fila actual
+    var precio = parseFloat(row.find('td:nth-child(4)').text()); // Obtener el precio
+    var cantidad = parseInt($(this).val()); // Obtener la cantidad ingresada
+
+    // Calcular el sub total y actualizar el valor
+    var subtotal = precio * cantidad;
+    row.find('.subtotal').text(subtotal.toFixed(2));
+
+    // Calcular el total sumando los subtotales de todas las filas
+    var total = 0;
+    $('.subtotal').each(function() {
+      total += parseFloat($(this).text());
+    });
+
+    // Mostrar el total
+    $('#total').text(total.toFixed(2));
+  });
+});
+
+        </script>
+    </body>
+</html>
