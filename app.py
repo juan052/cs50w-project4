@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_sqlalchemy import SQLAlchemy
 from models import *
+from helper import *
 from sqlalchemy.orm import joinedload
 app = Flask(__name__)
 
@@ -40,31 +41,79 @@ def upload():
 # Inicio
 @app.route("/")
 def index():
-    Precios=Precio.query.options(joinedload(Precio.producto)).limit(4).all()
-    return render_template('index.html', Precios=Precios)
+    usuario = session.get('cliente_id')
+    if usuario is None:
+        # La sesión no existe
+        # Realiza alguna acción o redirige a otra página
+        Precios = Precio.query.options(joinedload(Precio.producto)).limit(4).all()
+        return render_template('index.html', Precios=Precios)
+    else:
+        # La sesión existe
+        Precios = Precio.query.options(joinedload(Precio.producto)).limit(4).all()
+        return render_template('index.html', Precios=Precios, usuario=usuario)
 
+@app.route("/home")
+def home():
+    usuario = session.get('cliente_id')
+    if usuario is None:
+        # La sesión no existe
+        # Realiza alguna acción o redirige a otra página
+        Precios = Precio.query.options(joinedload(Precio.producto)).limit(4).all()
+        return render_template('index.html', Precios=Precios)
+    else:
+        # La sesión existe
+        Precios = Precio.query.options(joinedload(Precio.producto)).limit(4).all()
+        return render_template('index.html', Precios=Precios, usuario=usuario)
+@app.route("/logout")
+def logout():
+      # Borrar toda la sesión
+    session.clear()
+
+    # Redireccionar al inicio de sesión
+    return redirect(url_for('home'))
 
 @app.route("/acerca")
 def acerca():
-    
-    return render_template('about.html')
+    usuario = session.get('cliente_id')
+    if usuario is None:
+        # La sesión no existe
+        # Realiza alguna acción o redirige a otra página
+        return render_template('about.html')
+    else:
+        # La sesión existe
+        
+        return render_template('about.html', usuario=usuario)
 
 @app.route("/shop")
 def shop():
-    Precios=Precio.query.options(joinedload(Precio.producto)).all()
-    return render_template('shop.html', Precios=Precios)
+    usuario = session.get('cliente_id')
+    if usuario is None:
+        # La sesión no existe
+        # Realiza alguna acción o redirige a otra página
+        Precios = Precio.query.options(joinedload(Precio.producto)).all()
+        return render_template('index.html', Precios=Precios)
+    else:
+        # La sesión existe
+        Precios=Precio.query.options(joinedload(Precio.producto)).all()
+        return render_template('shop.html', Precios=Precios,usuario=usuario)
+    
+   
 
 @app.route("/inicio")
+@login_required
 def inicio():
-    return render_template('inicio.html')
+    usuario = session.get('trabajador_id')
+    return render_template('inicio.html',usuario=usuario)
 
 
 @app.route("/categoria")
+@login_required
 def categoria():
     categorias = CategoriaProducto.query.all()
     return render_template('categoria.html', categorias=categorias)
 
 @app.route("/crear_categoria", methods=["GET", "POST"])
+@login_required
 def crear_categoria():
     if request.method == "POST":
         nombre = request.form.get('nombre')
@@ -78,6 +127,7 @@ def crear_categoria():
         return render_template('categoria.html')
     
 @app.route("/editar_categoria/<int:id>", methods=["GET", "POST"])
+@login_required
 def editar_categoria(id):
     categoria = CategoriaProducto.query.get(id)
     if request.method == "POST":
@@ -90,6 +140,7 @@ def editar_categoria(id):
        return redirect(url_for('categoria'))
     
 @app.route("/eliminar_categoria", methods=["POST"])
+@login_required
 def eliminar_categoria():
     categoria_id = request.form.get("id")
     categoria = CategoriaProducto.query.get(categoria_id)
@@ -102,12 +153,14 @@ def eliminar_categoria():
     return redirect(url_for('categoria'))
 
 @app.route("/sub")
+@login_required
 def sub():
     categorias = CategoriaProducto.query.all()
     subcategorias = SubCategoriaProducto.query.options(joinedload(SubCategoriaProducto.categoria)).all()
     return render_template('sub_categoria.html', categorias=categorias, subcategorias=subcategorias)
 
 @app.route("/crear_sub", methods=["GET", "POST"])
+@login_required
 def crear_sub():
    
     if request.method == "POST":
@@ -125,6 +178,7 @@ def crear_sub():
     
 
 @app.route("/sub_actualizar/<int:id>", methods=["GET", "POST"])
+@login_required
 def sub_actualizar(id):
     sub = SubCategoriaProducto.query.get(id)
     if request.method == "POST":
@@ -139,6 +193,7 @@ def sub_actualizar(id):
 
 
 @app.route("/eliminar_sub", methods=["POST"])
+@login_required
 def eliminar_sub():
     sub_id = request.form.get("id")
     subcategoria = SubCategoriaProducto.query.get(sub_id)
@@ -152,6 +207,7 @@ def eliminar_sub():
 
 
 @app.route("/producto", methods=["GET", "POST"])
+@login_required
 def producto():
     
     producto = Producto.query.options(joinedload(Producto.subcategoria).joinedload(SubCategoriaProducto.categoria)).all()
@@ -160,6 +216,7 @@ def producto():
 
 
 @app.route("/producto_crear", methods=["GET","POST"])
+@login_required
 def producto_crear():
     if request.method == "POST":
         id_sub_categoria=request.form.get('subcategoria')
@@ -185,6 +242,7 @@ def producto_crear():
     
 
 @app.route("/producto_actualizar/<int:producto_id>", methods=["GET", "POST"])
+@login_required
 def producto_actualizar(producto_id):
     producto = Producto.query.get_or_404(producto_id)
 
@@ -221,6 +279,7 @@ def producto_actualizar(producto_id):
         return redirect(url_for('producto'))
 
 @app.route("/eliminar_producto", methods=["POST"])
+@login_required
 def eliminar_producto():
     producto_id = request.form.get("id")
     print(producto_id)
@@ -241,6 +300,7 @@ def eliminar_logo_antigua(filename):
 
 
 @app.route("/precio_producto",methods=["POST","GET"])
+@login_required
 def precio_producto():
    Precios=Precio.query.options(joinedload(Precio.producto)).all()
    productos = Producto.query.options(joinedload(Producto.subcategoria).joinedload(SubCategoriaProducto.categoria)).all()
@@ -250,6 +310,7 @@ def precio_producto():
 
 
 @app.route("/crear_precio",methods=["GET","POST"])
+@login_required
 def crear_precio():
     if request.method == "POST":
         id_producto=request.form.get('producto')
@@ -266,6 +327,7 @@ def crear_precio():
 
 
 @app.route("/actualizar_precio/<int:id>",methods=["GET","POST"])
+@login_required
 def actualizar_precio(id):
     precio = Precio.query.get(id)
     if request.method == "POST":
@@ -284,12 +346,14 @@ def actualizar_precio(id):
         return redirect(url_for('precio_Producto'))
 
 @app.route("/trabajador",methods=["GET","POST"])
+@login_required
 def trabajador():
     trabajadores = Trabajador.query.options(joinedload(Trabajador.persona)).all()
     return render_template("trabajador.html", trabajadores=trabajadores) 
 
 
 @app.route("/crear_trabajador",methods=["GET","POST"])
+@login_required
 def crear_trabajador():
     if request.method == "POST":
         nombre=request.form.get('nombre')
@@ -331,29 +395,58 @@ def crear_trabajador():
 
 #Usuarios
 @app.route("/usuarios",methods=["GET","POST"])
+@login_required
 def usuarios():
     return render_template("usuarios.html")
 
 
 @app.route("/login",methods=["GET","POST"])
 def login():
-  
+    contraseña = "12345678"
+    contraseña_encriptada = generate_password_hash(contraseña)
+    print(contraseña_encriptada)
     return render_template("login.html")
 
-@app.route("/validar",methods=["GET","POST"])
+
+
+@app.route("/validar", methods=["GET", "POST"])
 def validar():
     if request.method == "POST":
-        usuario=request.form.get('usuario')
+        usuario = request.form.get('usuario')
         contraseña = request.form.get('contraseña')
-        if usuario == "admin" and contraseña == "admin":
-            return redirect(url_for('inicio'))
-            print("El usuario y la contraseña son válidos. Acceso concedido.")
+
+        # Obtener el usuario de la base de datos por nombre de usuario
+        usuario_db = Usuario.query.filter_by(usuario=usuario).first()
+
+        if usuario_db and check_password_hash(usuario_db.contraseña, contraseña):
+            # Las contraseñas coinciden, el usuario es válido
+            if usuario_db.id_grupo == 2:
+                cliente = Cliente.query.filter_by(id_persona=usuario_db.id_persona).first()
+                persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
+                session['cliente_id'] = cliente.id
+                session['cliente_foto'] = cliente.foto
+                session['cliente_nombre'] = persona.nombre
+                session['cliente_direccion'] = persona.direccion
+                session['cliente_celular'] = persona.celular
+                return redirect(url_for('home'))
+            elif usuario_db.id_grupo == 1:
+                    trabajador = Trabajador.query.filter_by(id_persona=usuario_db.id_persona).first()
+                    print("si entro")
+                    persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
+                    session['trabajador_id'] = trabajador.id
+                    session['trabajador_foto'] = trabajador.foto
+                    session['trabajador_nombre'] = persona.nombre
+                    session['trabajador_direccion'] = persona.direccion
+                    session['trabajador_celular'] = persona.celular
+                    return redirect(url_for('inicio'))
+            
         else:
-            print("El usuario y/o la contraseña son incorrectos. Acceso denegado.")
-       
-        return redirect(url_for('login'))
+            flash("Usuario y/o contraseña incorrectos. Acceso denegado.", "error")
+            print("no entre")
+            return redirect(url_for('login'))
     else:
-       return render_template("login.html")
+        return render_template("login.html")
+
 
 def obtener_productos():
     productos = Producto.query.all()
@@ -378,9 +471,11 @@ def agregar():
     carrito = session.get('carrito', [])
     
     for key, value in request.form.items():
+        print("Clave:", key)
+        print("Valor:", value)
         if key.startswith('producto_id_'):
-            producto_id = int(value)
-            cantidad_key = 'cantidad_' + key.split('_')[2]  # Obtiene la clave específica de cantidad
+            producto_id = int(key.split('_')[2])  # Obtener el ID del producto del nombre de la clave
+            cantidad_key = 'cantidad_' + str(producto_id)  # Construir la clave específica de cantidad
             cantidad = int(request.form.get(cantidad_key, 1))
             
             for item in carrito:
@@ -390,9 +485,12 @@ def agregar():
             else:
                 producto = {'id': producto_id, 'cantidad': cantidad}
                 carrito.append(producto)
-    print(cantidad)
+                break  # Agrega el producto y sale del bucle principal
+    print("Carrito actualizado:", carrito)
     session['carrito'] = carrito
     return redirect('/shop')
+
+
 
 
 
@@ -436,3 +534,73 @@ def eliminar(producto_id):
     session['carrito'] = carrito
     
     return redirect('/card')
+
+@app.route('/registro')
+def registro():
+   
+ 
+    return render_template("registro_usuario.html")
+
+
+
+
+
+@app.route('/registrase',methods=["GET", "POST"])
+def registrase():
+    if request.method == "POST":
+        # Obtener los datos del formulario
+        nombre = request.form.get("nombre")
+        apellido = request.form.get("apellido")
+        telefono = request.form.get("telefono")
+        print(telefono)
+        fecha_nacimiento_str = request.form.get("fecha")
+        cedula = request.form.get("cedula")
+        genero = request.form.get("genero")
+        email = request.form.get("email")
+        contraseña = request.form.get("contraseña")
+        direccion = request.form.get("Direccion")
+        logo = None
+        if 'foto' in request.files:
+            logo = request.files['foto']
+            print(logo)
+            if logo:
+                filename = str(uuid.uuid4()) + secure_filename(logo.filename)
+                logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+        print(logo)
+        fecha_nacimiento = datetime.datetime.strptime(fecha_nacimiento_str, "%Y-%m-%d").date()
+        usuario_existente = Usuario.query.filter_by(usuario=email).first()
+        if usuario_existente:
+            # El email ya está registrado, mostrar mensaje de error
+            flash("El email ya está registrado", "error")
+            return redirect('/registrase')
+
+        # Crear una instancia de Persona y PersonaNatural
+        persona = Persona(nombre=nombre, correo=email, direccion=direccion, celular=telefono)
+        persona_natural = PersonaNatural(id_persona=persona.id,apellido=apellido, cedula=cedula, fecha_nacimiento=fecha_nacimiento, genero=genero)
+
+        # Asociar Persona y PersonaNatural
+        persona.persona_natural = persona_natural
+
+        # Realizar las acciones necesarias para guardar los modelos en la base de datos
+        db.session.add(persona)
+        db.session.commit()
+
+        # Generar el hash de la contraseña
+        hashed_password = generate_password_hash(contraseña)
+        usuario = Usuario(id_grupo=2, id_persona=persona.id, usuario=email, contraseña=hashed_password, estado=1)
+        persona.usuario = usuario
+         # Crear una instancia de Cliente y asociarla a Persona
+        cliente = Cliente(id_persona=persona.id, tipo_cliente="Normal", foto=logo, estado=1)
+        persona.cliente = cliente
+
+        # Agregar los objetos a la sesión de la base de datos y confirmar los cambios
+        db.session.add(usuario)
+        db.session.add(cliente)
+        db.session.commit()
+
+        # Redirigir al usuario a la página de inicio de sesión después del registro exitoso
+        return redirect('/login')
+
+    return render_template('registro_usuario.html')
+

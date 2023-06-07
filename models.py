@@ -158,4 +158,49 @@ class Salario(db.Model):
     estado = db.Column(db.Integer)
 
 
+class Cliente(db.Model):
+    __tablename__ = 'clientes'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(db.Integer, primary_key=True)
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
+    tipo_cliente = db.Column(db.String(250), nullable=False)
+    foto = db.Column(db.String(250))
+    estado = db.Column(db.Integer)
+
+    def __init__(self, id_persona, tipo_cliente, foto, estado):
+        self.id_persona = id_persona
+        self.tipo_cliente = tipo_cliente
+        self.foto = foto
+        self.estado = estado
+
+class GrupoUsuarios(db.Model):
+    __tablename__ = 'grupo_usuarios'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False)
+    descripcion = db.Column(db.String(250), nullable=False)
+    estado = db.Column(db.Integer)
+
+    def __init__(self, nombre, descripcion, estado):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.estado = estado
+
+class Usuario(db.Model):
+    __tablename__ = 'usuario'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_grupo = db.Column(db.Integer, db.ForeignKey('grupo_usuarios.id'))
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id'))
+    usuario = db.Column(db.String(200), nullable=False)
+    contraseña = db.Column(db.String(250), nullable=False)
+    estado = db.Column(db.Integer)
+
+    def __init__(self, id_grupo, id_persona, usuario, contraseña, estado):
+        self.id_grupo = id_grupo
+        self.id_persona = id_persona
+        self.usuario = usuario
+        self.contraseña = contraseña
+        self.estado = estado
+
 

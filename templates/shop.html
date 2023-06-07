@@ -27,15 +27,26 @@
 
 			<ul class="navbar">
 				<li><a href="/">Inicio</a></li>
-				<li><a href="/acerca">Acerca</a></li>
-				<li><a href="/shop" class="active">Productos</a></li>
+				<li><a href="/acerca">Acerca de</a></li>
+				<li><a href="/shop">Productos</a></li>
+				{% if 'cliente_id' in session %}
+				<li><a href="{{ url_for('logout') }}">Cerrar sesión</a></li>
+				{% endif %}
 			</ul>
 
 			<div class="icons">
 
-				<a href="/login"><i class="ri-user-line"></i></a>
-				<a href="/card"><i class="ri-shopping-cart-line"></i></a>
-				<div class="bx bx-menu" id="menu-icon"></div>
+				<div class="icons">
+					{% if 'cliente_foto' in session %}
+					<a href class="foto"><img
+						src="/static/img/imagenes/{{session['cliente_foto']}}" class="foto" alt></a>
+					{% else %}
+					<a href="/login"><i class="ri-user-line"></i></a>
+					{% endif %}
+	
+					<a href="/card"><i class="ri-shopping-cart-line"></i></a>
+					<div class="bx bx-menu" id="menu-icon"></div>
+				</div>
 			</div>
 		</header>
 
@@ -63,18 +74,16 @@
 							<img src="/static/img/imagenes/{{ producto.producto.logo }}" alt="imagen">
 						</div>
 						<h3>{{ producto.producto.nombre }}</h3>
-						<input type="text" value="{{ producto.id_producto }}" name="producto_id_{{ producto.id }}"
-							>
+						
 						<h4>{{ producto.producto.descripcion }}</h4>
 						<div class="inbox">
 							<div>
 								<a href="#" class="price">C${{ producto.precio_actual }}</a>
-								<input type="text" name="cantidad" value="1" hidden>
-
+								<input type="text" value="{{ producto.producto.id }}" name="producto_id_{{ producto.producto.id }}" hidden>
+								<input type="text" name="cantidad_{{ producto.producto.id }}" value="1" hidden>
 							</div>
 							<div class="rating">
-								<button class="price" type="submit" data-id="{{ producto.producto.id }}">Agregar
-									al carrito</button>
+								<button class="price" type="submit" data-id="{{ producto.producto.id }}">Agregar al carrito</button>
 							</div>
 						</div>
 						<div class="heart">
@@ -84,6 +93,7 @@
 					{% endfor %}
 				</div>
 			</form>
+			
 		</section>
 
 		<!----contact section design---->
@@ -129,8 +139,63 @@
 
 		<script src="https://unpkg.com/scrollreveal"></script>
 
-		<!---custom js link--->
-		<script type="text/javascript" src="js/script.js"></script>
-
+		<script src="{{ url_for('static', filename='script.js') }}"></script>
+		<script>
+			// Obtener elementos del DOM
+			const listaProductos = document.getElementById('productos');
+			const listaCarrito = document.getElementById('lista-carrito');
+			const total = document.getElementById('total');
+			const vaciarCarritoBtn = document.getElementById('vaciar-carrito');
+		
+			// Variable para almacenar los productos del carrito
+			let carrito = [];
+		
+			// Agregar evento click a los botones "Agregar al carrito"
+			listaProductos.addEventListener('click', agregarProducto);
+		
+			// Agregar evento click al botón de vaciar carrito
+			vaciarCarritoBtn.addEventListener('click', vaciarCarrito);
+		
+			// Función para agregar un producto al carrito
+			function agregarProducto(e) {
+			  if (e.target.classList.contains('agregar-carrito')) {
+				const productoId = e.target.getAttribute('data-id');
+				const producto = {
+				  id: productoId,
+				  nombre: e.target.parentElement.previousElementSibling.previousElementSibling.textContent,
+				  precio: parseFloat(e.target.parentElement.previousElementSibling.textContent.substring(2))
+				};
+				carrito.push(producto);
+				actualizarCarrito();
+			  }
+			}
+		
+			// Función para vaciar el carrito
+			function vaciarCarrito() {
+			  carrito = [];
+			  actualizarCarrito();
+			}
+		
+			// Función para actualizar el carrito en la interfaz
+			function actualizarCarrito() {
+			  listaCarrito.innerHTML = '';
+		
+			  carrito.forEach((producto) => {
+				const { id, nombre, precio } = producto;
+		
+				const itemCarrito = document.createElement('li');
+				itemCarrito.innerHTML = `${nombre} - $${precio.toFixed(2)}`;
+				listaCarrito.appendChild(itemCarrito);
+			  });
+		
+			  calcularTotal();
+			}
+		
+			// Función para calcular el total de la compra
+			function calcularTotal() {
+			  const totalCompra = carrito.reduce((total, producto) => total + producto.precio, 0);
+			  total.textContent = totalCompra.toFixed(2);
+			}
+		  </script>
 	</body>
 </html>

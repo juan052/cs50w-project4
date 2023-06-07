@@ -93,9 +93,17 @@ body{
                 <li><a href="/" class="active">Seguir comprando</a></li>
             </ul>
             <div class="icons">
-                <a href="/login"><i class="ri-user-line"></i></a>
-                <a href><i class="ri-shopping-cart-line"></i></a>
-                <div class="bx bx-menu" id="menu-icon"></div>
+                <div class="icons">
+                    {% if 'cliente_foto' in session %}
+                    <a href class="foto"><img
+                        src="/static/img/imagenes/{{session['cliente_foto']}}" class="foto" alt></a>
+                    {% else %}
+                    <a href="/login"><i class="ri-user-line"></i></a>
+                    {% endif %}
+    
+                    <a href="/card"><i class="ri-shopping-cart-line"></i></a>
+                    <div class="bx bx-menu" id="menu-icon"></div>
+                </div>
             </div>
         </header>
         <!----home section design---->
@@ -103,8 +111,7 @@ body{
         <br>
         <section class="product">
             <div class="middle-text">
-                <h3>Difruta tu compra. <span>También puedes personalizar tu
-                        pedido</span></h3>
+                <h3>Difruta tu compra. <span>También puedes personalizar tu pedido</span></h3>
             </div>
             <table class="table table-sm" id="datatable_users">
                 <thead>
@@ -120,20 +127,17 @@ body{
                 <tbody>
                     {% for item in carrito %}
                     <tr>
-                        <td><img src="/static/img/imagenes/{{ item.logo }}" alt
-                                width="50"></td>
+                        <td><img src="/static/img/imagenes/{{ item.logo }}" alt width="50"></td>
                         <td>{{ item.nombre }}</td>
                         <td>
                             <div class="input-group input-group-sm">
-                                <input type="number"
-                                    class="form-control form-control-sm cantidad-input"
+                                <input type="number" class="form-control form-control-sm cantidad-input"
                                     value="{{ item.cantidad }}" min="1">
                             </div>
                         </td>
                         <td>{{ item.precio }}</td>
-                        <td><span class="subtotal" id="subtotal{{ loop.index }}">{{
-                                item.precio * item.cantidad }}</span></td>
-
+                        <td><span class="subtotal" id="subtotal{{ loop.index }}">{{ item.precio * item.cantidad }}</span></td>
+        
                         <td><a href="/eliminar/{{ item.id }}">Eliminar</a></td>
                     </tr>
                     {% endfor %}
@@ -141,10 +145,11 @@ body{
             </table>
             <div class="row mt-4">
                 <div class="col-12 text-end">
-                  <strong>Total:</strong> <span id="total" class="d-inline-block fs-4">c$ 0.00</span>
+                    <strong>Total:</strong> <span id="total" class="d-inline-block fs-4">c$ 0.00</span>
                 </div>
-              </div>
+            </div>
         </section>
+        
 
         <section class="contact">
             <div class="main-contact">
