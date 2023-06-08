@@ -572,7 +572,7 @@ def registrase():
         nombre = request.form.get("nombre")
         apellido = request.form.get("apellido")
         telefono = request.form.get("telefono")
-        fecha_nacimiento_str = request.form.get("fecha")
+        fecha_nacimiento = request.form.get("fecha")
         cedula = request.form.get("cedula")
         genero = request.form.get("genero")
         email = request.form.get("email")
@@ -586,7 +586,7 @@ def registrase():
                 logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 logo = filename
         
-        fecha_nacimiento = datetime.datetime.strptime(fecha_nacimiento_str, "%Y-%m-%d").date()
+        
         usuario_existente = Usuario.query.filter_by(usuario=email).first()
         if usuario_existente:
             # El email ya está registrado, mostrar mensaje de error
