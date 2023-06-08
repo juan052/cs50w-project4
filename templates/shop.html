@@ -28,7 +28,7 @@
 			<ul class="navbar">
 				<li><a href="/">Inicio</a></li>
 				<li><a href="/acerca">Acerca de</a></li>
-				<li><a href="/shop">Productos</a></li>
+				<li><a href="/shop" class="active">Productos</a></li>
 				{% if 'cliente_id' in session %}
 				<li><a href="{{ url_for('logout') }}">Cerrar sesión</a></li>
 				{% endif %}

@@ -166,7 +166,7 @@ class Cliente(db.Model):
     tipo_cliente = db.Column(db.String(250), nullable=False)
     foto = db.Column(db.String(250))
     estado = db.Column(db.Integer)
-
+    persona = relationship('Persona')
     def __init__(self, id_persona, tipo_cliente, foto, estado):
         self.id_persona = id_persona
         self.tipo_cliente = tipo_cliente
@@ -203,7 +203,18 @@ class Usuario(db.Model):
         self.contraseña = contraseña
         self.estado = estado
 
+class TipoVenta(db.Model):
+    __tablename__ = 'tipo_venta'
 
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(250), nullable=False)
+    descripcion = db.Column(db.String(250))
+    estado = db.Column(db.Integer)
+
+    def __init__(self, nombre, descripcion, estado):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.estado = estado 
 class Venta(db.Model):
     __tablename__ = 'venta'
 
@@ -212,6 +223,8 @@ class Venta(db.Model):
     id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id'))
     fecha = db.Column(db.Date)
     estado = db.Column(db.Integer)
+    tipo_venta = relationship('TipoVenta')
+    cliente = relationship('Cliente')
 
     def __init__(self, id_tipo, id_cliente, fecha, estado):
         self.id_tipo = id_tipo

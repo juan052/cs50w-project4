@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block main %}
+<div class="xp-breadcrumbbar text-center">
+    <h4 class="page-title" style="color:black">Colaboradores</h4>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">Gestion de
+                colaboradores</a></li>
+        <li class="breadcrumb-item active"
+            aria-current="page">Colaborades</li>
+    </ol>
+</div>
+
+<div class="row">
+
+    <div class="col-md-12">
+        <div class="table-wrapper">
+            <div class="table-title">
+                <div class="row">
+                    <div class="col-sm-6 p-0 d-flex
+                        justify-content-lg-start
+                        justify-content-center">
+                        <h2 class="ml-lg-2">Gestion de
+                            Ventas</h2>
+                    </div>
+                    <div class="col-sm-6 p-0 d-flex
+                        justify-content-lg-end
+                        justify-content-center">
+                        <a href="#addEmployeeModal"
+                            class="btn btn-success"
+                            data-toggle="modal">
+                            <i class="material-icons">&#xE147;</i>
+                            <span>Agregar Colaborador</span></a>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-striped table-hover"
+            id="datatable_users">
+                <thead>
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Tipo Venta</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas %}
+                    <tr>
+                        <td>{{ venta.id }}</td>
+                        <td>{{ venta.tipo_venta.nombre }}</td>
+                        <td>{{ venta.cliente.persona.nombre }}</td>
+                        <td>{{ venta.fecha }}</td>
+                        <td>
+                            {% if venta.estado == 1 %}
+                             procesos
+                            {% elif venta.estado == 2 %}
+                            Inactivo
+                            {% endif %}
+                           
+                           
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+     
+    </div>
+    
+    <!---footer---->
+
+</div>
+{% endblock %}

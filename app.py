@@ -1,5 +1,5 @@
 import os
-import datetime
+from datetime import datetime
 import requests
 import uuid
 from flask import Flask, session, redirect, url_for, render_template, request, flash,jsonify
@@ -11,6 +11,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_sqlalchemy import SQLAlchemy
 from models import *
 from helper import *
+from helper1 import *
 from sqlalchemy.orm import joinedload
 app = Flask(__name__)
 
@@ -456,7 +457,7 @@ def validar():
                  session['trabajador_direccion'] = persona.direccion
                  session['trabajador_celular'] = persona.celular
                  print("Antes de la redirección a 'inicio'")
-                 return redirect(url_for('inicio'))
+                 return redirect(url_for('producto'))
             
         else:
             flash("Usuario y/o contraseña incorrectos. Acceso denegado.", "error")
@@ -514,6 +515,7 @@ def agregar():
 
 # Ruta para mostrar el carrito
 @app.route("/card", methods=["GET", "POST"])
+@login_requirede
 def card():
     carrito = session.get('carrito', [])
     productos = obtener_productos()
@@ -532,7 +534,8 @@ def card():
                 carrito_actualizado.append(item_actualizado)
                 break
 
-    print(carrito_actualizado)
+     # Guardar los detalles de la venta en la sesión
+    session['detalles_venta'] = carrito_actualizado
     return render_template("card.html", carrito=carrito_actualizado)
 
 
@@ -626,30 +629,46 @@ def registrase():
 def guardar_venta():
     # Obtener los datos de la venta desde la solicitud
     id_tipo = request.form.get('id_tipo')
-    id_cliente = request.form.get('id_cliente')
+    id_cliente = session['cliente_id']
     fecha = request.form.get('fecha')
     estado = request.form.get('estado')
+    fecha_actual = datetime.now()
 
+    # Formatear la fecha en formato PostgreSQL
+    fecha_postgresql = fecha_actual.strftime('%Y-%m-%d')
     # Crear una instancia de Venta
-    venta = Venta(id_tipo=id_tipo, id_cliente=id_cliente, fecha=fecha, estado=estado)
+    venta = Venta(id_tipo=1, id_cliente=id_cliente, fecha=fecha_postgresql, estado=1)
     db.session.add(venta)
+
     db.session.commit()
 
     # Obtener los detalles de la venta desde la solicitud
-    detalles = request.form.getlist('detalles')
+    # Obtener los detalles de la venta desde la sesión
+    detalles = session.get('detalles_venta', [])
 
     # Crear instancias de DetalleVenta y asociarlas a la venta
     for detalle in detalles:
-        id_producto = detalle['id_producto']
-        subtotal = detalle['subtotal']
-        descuento = detalle['descuento']
-        total = detalle['total']
+        id_producto = detalle['id']
+        subtotal = detalle['precio'] * detalle['cantidad']
+        descuento = 0
+        total = subtotal - descuento
         detalle_venta = DetalleVenta(id_venta=venta.id, id_producto=id_producto, subtotal=subtotal, descuento=descuento, total=total)
         db.session.add(detalle_venta)
     
     db.session.commit()
+      # Eliminar el carrito de la sesión
+    session.pop('carrito', None)
+    return redirect('/shop')
+    
 
-    # Respuesta de éxito
-    return 'Venta guardada correctamente'
 
+@app.route('/ventas', methods=['GET'])
+@login_required
+def ventas():
+    # Obtener todos los registros de los modelos
+    ventas = Venta.query\
+    .options(joinedload(Venta.tipo_venta), joinedload(Venta.cliente).joinedload(Cliente.persona))\
+    .all()
 
+# Pasar los datos a la plantilla
+    return render_template('venta.html', ventas=ventas)
