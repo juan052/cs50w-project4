@@ -204,3 +204,35 @@ class Usuario(db.Model):
         self.estado = estado
 
 
+class Venta(db.Model):
+    __tablename__ = 'venta'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_tipo = db.Column(db.Integer, db.ForeignKey('tipo_venta.id'))
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id'))
+    fecha = db.Column(db.Date)
+    estado = db.Column(db.Integer)
+
+    def __init__(self, id_tipo, id_cliente, fecha, estado):
+        self.id_tipo = id_tipo
+        self.id_cliente = id_cliente
+        self.fecha = fecha
+        self.estado = estado
+
+
+class DetalleVenta(db.Model):
+    __tablename__ = 'detalle_venta'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_venta = db.Column(db.Integer, db.ForeignKey('venta.id'))
+    id_producto = db.Column(db.Integer, db.ForeignKey('producto.id'))
+    subtotal = db.Column(db.Numeric, nullable=False)
+    descuento = db.Column(db.Numeric, nullable=False)
+    total = db.Column(db.Numeric, nullable=False)
+
+    def __init__(self, id_venta, id_producto, subtotal, descuento, total):
+        self.id_venta = id_venta
+        self.id_producto = id_producto
+        self.subtotal = subtotal
+        self.descuento = descuento
+        self.total = total

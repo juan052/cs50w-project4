@@ -55,7 +55,8 @@
                         <td>{{ trabajadores.persona.persona_natural.cedula }}</td>
                         <td>{{ trabajadores.persona.direccion }}</td>
                         <td>{{ trabajadores.persona.celular }}</td>
-                        <th> <img src="/static/img/imagenes/{{trabajadores.foto}}"
+                        <th> <img
+                                src="/static/img/imagenes/{{trabajadores.foto}}"
                                 alt width="50"></th>
                         <td>
                             {% if trabajadores.estado == 1 %}
@@ -87,7 +88,7 @@
         <div id="addEmployeeModal" class="modal fade">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <form action="/crear_trabajador" method="post"
+                    <form action="/crear_usuarios" method="post"
                         enctype="multipart/form-data">
                         <div class="modal-header">
                             <h4 class="modal-title">Crear usuarios</h4>
@@ -96,73 +97,28 @@
                                 aria-hidden="true">&times;</button>
                         </div>
                         <div class="modal-body">
-
+                            <div class="form-group">
+                                <label>Colaborador:</label>
+                                <select name="id_persona" id="id_persona" class="form-control">
+                                    {% for trabajador in trabajadores %}
+                                      <option value="{{ trabajador.id_persona }}">{{ trabajador.persona.nombre }}</option>
+                                    {% endfor %}
+                                  </select>
+                                  
+                            </div>
                             <div class="form-group">
                                 <label>Correo: </label>
-                                <input type="text" name="nombre"
+                                <input type="text" name="correo"
                                     class="form-control"
                                     required>
                             </div>
                             <div class="form-group">
                                 <label>Contraseña: </label>
-                                <input type="text" name="apellido"
+                                <input type="password" name="contraseña"
                                     class="form-control"
                                     required>
 
                             </div>
-                            <div class="form-group">
-                                <label>Cedula: </label>
-                                <input type="text" name="cedula"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <label>Fecha de nacimiento: </label>
-                                <input type="date" name="fecha_nacimiento"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <label>Correo: </label>
-                                <input type="email" name="correo"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <label>Celular:</label>
-                                <input type="text" name="celular"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <label>Direccion: </label>
-                                <textarea name="direccion"
-                                    class="form-control"
-                                    required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Foto</label>
-                                <input type="file" name="foto"
-                                    class="form-control"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <label>Genero</label>
-                                <select name="genero" id
-                                    class="form-control">
-                                    <option value="F">Femenino</option>
-                                    <option value="M">Masculino</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Estado</label>
-                                <select name="estado"
-                                    class="form-control">
-                                    <option value="1">Activo</option>
-                                    <option value="1">Inactivo</option>
-                                </select>
-                            </div>
-                          
 
                         </div>
                         <div class="modal-footer">

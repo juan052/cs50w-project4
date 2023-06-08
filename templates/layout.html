@@ -134,7 +134,7 @@
                         <ul class="collapse list-unstyled menu"
                             id="pageSubmenu6">
                             <li>
-                                <a href="#">Usuarios</a>
+                                <a href="/usuarios">Usuarios</a>
                             </li>
                             
                         </ul>
@@ -177,7 +177,7 @@
                                         <ul class="nav navbar-nav flex-row
                                             ml-auto">
                                           <li class="nav-link">
-                                            <a href="">Maria Gomez</a>
+                                            <a href="">{{session['trabajador_nombre']}}</a>
                                           </li>
                                             <li class="nav-item dropdown">
                                                 <a class="nav-link" href="#"
@@ -191,15 +191,7 @@
                                                 </a>
                                                 <ul class="dropdown-menu
                                                     small-menu">
-                                                    <li>
-                                                        <a href="#">
-                                                            <span
-                                                                class="material-icons">
-                                                                person_outline
-                                                            </span>Profile
-
-                                                        </a>
-                                                    </li>
+                                                 
                                                     <li>
                                                         <a href="#"><span
                                                                 class="material-icons">
@@ -207,7 +199,7 @@
                                                             </span>Settings</a>
                                                     </li>
                                                     <li>
-                                                        <a href="#"><span
+                                                        <a href="/logout"><span
                                                                 class="material-icons">
                                                                 logout</span>Logout</a>
                                                     </li>

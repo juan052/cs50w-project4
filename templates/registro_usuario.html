@@ -62,7 +62,7 @@
 
                     <h3 style="margin-left: 40%; margin-top: 3%;">Registro de
                         usuario</h3>
-                    <form action="/registrase"  method="post">
+                    <form action="/registrase"  method="post"  enctype="multipart/form-data">
                         <p>
                             <label>Nombre :</label>
                             <input type="text" name="nombre" id="nombre"
@@ -75,7 +75,7 @@
                         </p>
                         <p>
                             <label>Telefono</label>
-                            <input type="number" name="telefono " id="telefono "
+                            <input type="number" name="telefono" id="telefono"
                                 required>
                         </p>
                         <p>
@@ -96,7 +96,7 @@
                         </p>
                         <p>
                             <label>Foto:</label>
-                            <input type="file" name="foto">
+                            <input type="file" name="foto" accept="">
                         </p>
                         <p>
                             <label>Correo Electronico: </label>

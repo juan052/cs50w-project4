@@ -397,14 +397,26 @@ def crear_trabajador():
 @app.route("/usuarios",methods=["GET","POST"])
 @login_required
 def usuarios():
-    return render_template("usuarios.html")
+    trabajadores = Trabajador.query.join(Persona).all()
+    return render_template("usuarios.html", trabajadores=trabajadores)
 
+@app.route("/crear_usuarios",methods=["GET","POST"])
+@login_required
+def crear_usuarios():
+    if request.method == "POST":
+        persona=request.form.get('id_persona')
+        correo = request.form.get('correo')
+        contraseña=request.form.get('contraseña')
+        hashed_password = generate_password_hash(contraseña)
+        usuario = Usuario(id_grupo=1, id_persona=persona, usuario=correo, contraseña=hashed_password, estado=1)
+        db.session.add(usuario)
+        db.session.commit()
+        return redirect("usuarios")
+    return render_template("usuarios.html")
 
 @app.route("/login",methods=["GET","POST"])
 def login():
-    contraseña = "12345678"
-    contraseña_encriptada = generate_password_hash(contraseña)
-    print(contraseña_encriptada)
+ 
     return render_template("login.html")
 
 
@@ -421,6 +433,7 @@ def validar():
         if usuario_db and check_password_hash(usuario_db.contraseña, contraseña):
             # Las contraseñas coinciden, el usuario es válido
             if usuario_db.id_grupo == 2:
+                
                 cliente = Cliente.query.filter_by(id_persona=usuario_db.id_persona).first()
                 persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
                 session['cliente_id'] = cliente.id
@@ -428,17 +441,22 @@ def validar():
                 session['cliente_nombre'] = persona.nombre
                 session['cliente_direccion'] = persona.direccion
                 session['cliente_celular'] = persona.celular
+                session['cliente_correo']=persona.correo
                 return redirect(url_for('home'))
             elif usuario_db.id_grupo == 1:
-                    trabajador = Trabajador.query.filter_by(id_persona=usuario_db.id_persona).first()
-                    print("si entro")
-                    persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
-                    session['trabajador_id'] = trabajador.id
-                    session['trabajador_foto'] = trabajador.foto
-                    session['trabajador_nombre'] = persona.nombre
-                    session['trabajador_direccion'] = persona.direccion
-                    session['trabajador_celular'] = persona.celular
-                    return redirect(url_for('inicio'))
+                 print("Entró en el bloque elif")
+                 print("usuario_db.id_grupo:", usuario_db.id_grupo)
+                 trabajador = Trabajador.query.filter_by(id_persona=usuario_db.id_persona).first()
+                 print("trabajador:", trabajador)
+                 persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
+                 print("persona:", persona)
+                 session['user_id'] = trabajador.id
+                 session['trabajador_foto'] = trabajador.foto
+                 session['trabajador_nombre'] = persona.nombre
+                 session['trabajador_direccion'] = persona.direccion
+                 session['trabajador_celular'] = persona.celular
+                 print("Antes de la redirección a 'inicio'")
+                 return redirect(url_for('inicio'))
             
         else:
             flash("Usuario y/o contraseña incorrectos. Acceso denegado.", "error")
@@ -544,15 +562,13 @@ def registro():
 
 
 
-
-@app.route('/registrase',methods=["GET", "POST"])
+@app.route('/registrase', methods=["GET", "POST"])
 def registrase():
     if request.method == "POST":
         # Obtener los datos del formulario
         nombre = request.form.get("nombre")
         apellido = request.form.get("apellido")
         telefono = request.form.get("telefono")
-        print(telefono)
         fecha_nacimiento_str = request.form.get("fecha")
         cedula = request.form.get("cedula")
         genero = request.form.get("genero")
@@ -562,12 +578,11 @@ def registrase():
         logo = None
         if 'foto' in request.files:
             logo = request.files['foto']
-            print(logo)
             if logo:
                 filename = str(uuid.uuid4()) + secure_filename(logo.filename)
                 logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 logo = filename
-        print(logo)
+        
         fecha_nacimiento = datetime.datetime.strptime(fecha_nacimiento_str, "%Y-%m-%d").date()
         usuario_existente = Usuario.query.filter_by(usuario=email).first()
         if usuario_existente:
@@ -577,7 +592,7 @@ def registrase():
 
         # Crear una instancia de Persona y PersonaNatural
         persona = Persona(nombre=nombre, correo=email, direccion=direccion, celular=telefono)
-        persona_natural = PersonaNatural(id_persona=persona.id,apellido=apellido, cedula=cedula, fecha_nacimiento=fecha_nacimiento, genero=genero)
+        persona_natural = PersonaNatural(id_persona=persona.id, apellido=apellido, cedula=cedula, fecha_nacimiento=fecha_nacimiento, genero=genero)
 
         # Asociar Persona y PersonaNatural
         persona.persona_natural = persona_natural
@@ -590,7 +605,8 @@ def registrase():
         hashed_password = generate_password_hash(contraseña)
         usuario = Usuario(id_grupo=2, id_persona=persona.id, usuario=email, contraseña=hashed_password, estado=1)
         persona.usuario = usuario
-         # Crear una instancia de Cliente y asociarla a Persona
+
+        # Crear una instancia de Cliente y asociarla a Persona
         cliente = Cliente(id_persona=persona.id, tipo_cliente="Normal", foto=logo, estado=1)
         persona.cliente = cliente
 
@@ -603,4 +619,37 @@ def registrase():
         return redirect('/login')
 
     return render_template('registro_usuario.html')
+
+
+
+@app.route('/guardar_venta', methods=['POST'])
+def guardar_venta():
+    # Obtener los datos de la venta desde la solicitud
+    id_tipo = request.form.get('id_tipo')
+    id_cliente = request.form.get('id_cliente')
+    fecha = request.form.get('fecha')
+    estado = request.form.get('estado')
+
+    # Crear una instancia de Venta
+    venta = Venta(id_tipo=id_tipo, id_cliente=id_cliente, fecha=fecha, estado=estado)
+    db.session.add(venta)
+    db.session.commit()
+
+    # Obtener los detalles de la venta desde la solicitud
+    detalles = request.form.getlist('detalles')
+
+    # Crear instancias de DetalleVenta y asociarlas a la venta
+    for detalle in detalles:
+        id_producto = detalle['id_producto']
+        subtotal = detalle['subtotal']
+        descuento = detalle['descuento']
+        total = detalle['total']
+        detalle_venta = DetalleVenta(id_venta=venta.id, id_producto=id_producto, subtotal=subtotal, descuento=descuento, total=total)
+        db.session.add(detalle_venta)
+    
+    db.session.commit()
+
+    # Respuesta de éxito
+    return 'Venta guardada correctamente'
+
 
