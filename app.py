@@ -469,7 +469,27 @@ def actualizar_trabajador(id):
     else:
         return render_template('trabajador.html', trabajador=trabajador, persona=persona, personanat=personanat)
 
+@app.route("/eliminar_trabajador",methods=["GET","POST"])
+def eliminar_colaborador():
+    if request.method == "POST":
+        id=request.form.get('id')
+        trabajador=Trabajador.query.get(id)
+        if trabajador:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+            trabajador.estado = 2
+            db.session.commit()
 
+        usuario=Usuario.query.filter_by(id_persona=trabajador.id_persona).first()
+        if usuario:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+            usuario.estado = 2
+            db.session.commit()
+
+        return redirect(url_for('trabajador'))
+    
+    
+    
+    return redirect(url_for('trabajador'))
 
 
 #Usuarios
@@ -525,12 +545,18 @@ def verificar():
     if request.method == "POST":
         id=request.form.get('id')
         usuario=Usuario.query.get(id)
-        if usuario:
-        # Cambiar el estado de la categoría a inactivo (estado = 2)
-            usuario.estado = 1
-            db.session.commit()
+        trabajador=Trabajador.query.filter_by(id_persona=usuario.id_persona).first()
+        if trabajador.estado == 2:
+            flash("No se puede activar el usuario, el trabajador es inactivo","Error")
+            return  redirect(url_for('usuarios'))
+        
+        else:
+            if usuario:
+            # Cambiar el estado de la categoría a inactivo (estado = 2)
+                usuario.estado = 1
+                db.session.commit()
 
-        return redirect(url_for('usuarios'))
+                return redirect(url_for('usuarios'))
     
     
     
@@ -553,6 +579,7 @@ def eliminar_usuario():
     return redirect(url_for('usuarios'))
 
 @app.route("/cambiar_contraseña",methods=["GET","POST"])
+@login_required
 def cambiar_contraseña():
     if request.method == "POST":
         id=request.form.get('id')
@@ -585,6 +612,81 @@ def cambiar_contraseña():
 
     
     return redirect(url_for('admin'))
+
+@app.route("/recuperar_contraseña",methods=["GET","POST"])
+def recuperar_contraseña():
+    if request.method == "POST":
+        correos=request.form.get('correo')
+        usuario=Usuario.query.filter_by(usuario=correos).first()
+        print(usuario)
+       
+        if usuario is None:
+         # Manejar el caso cuando el usuario no existe
+             flash("Se ha enviando un codigo de verificacion al correo", "error")
+             return redirect(url_for('recuperar_contraseña'))
+        contraseña=generar_contraseña()
+        cuerpo = '''
+    Estimado(a) ,
+    Aquí está tu código de seguridad para acceder al cambio de contraseña:   codigo de verficiacion: {0}
+    Por favor, utiliza este código al realizar el cambio de contraseña en tu cuenta. Si tienes alguna pregunta o necesitas asistencia adicional, no dudes en contactarnos.
+    ¡Gracias y ten un excelente día!
+
+    Atentamente, Luxx ART
+    '''.format(contraseña)
+        msg = Message('Codigo de verificacion - Acceso a cuenta', sender='ingsoftwar123@gmail.com', recipients=[correos])
+        msg.body = cuerpo
+        mail.send(msg)
+        hashed_password = generate_password_hash(contraseña)
+        usuario.contraseña=hashed_password
+        db.session.commit()
+        flash("Se ha enviando un codigo de verificacion al correo", "success")
+        return render_template("verficar_contraseña.html",correo=correos)
+
+
+    
+    return render_template("recuperar_contraseña.html")
+
+@app.route("/nueva_contraseña", methods=["GET", "POST"])
+def nueva_contraseña():
+    
+    if request.method == "POST":
+        correos=request.form.get('correo')
+        print("Coreo----------------------")
+        print(correos)
+        print("Correo--------------")
+        usuario = Usuario.query.filter_by(usuario=correos).first()
+        print(usuario)
+        contraseña_anterior = request.form.get('codigo_verficacion')
+        contraseña_nueva = request.form.get('contraseña_nueva')
+        confirmacion = request.form.get('confirmacion')
+        print(contraseña_nueva)
+        print(confirmacion)
+        if usuario is None:
+            # Manejar el caso cuando el usuario no existe
+            flash("El código no coincide, revisa tu correo nuevamente", "error")
+            return render_template("verficar_contraseña.html",correo=correos)
+
+        if not check_password_hash(usuario.contraseña, contraseña_anterior):
+            # Manejar el caso cuando la contraseña actual no coincide
+            flash("El código no coincide, revisa tu correo nuevamente", "error")
+            return render_template("verficar_contraseña.html",correo=correos)
+
+        if contraseña_nueva != confirmacion:
+            # Manejar el caso cuando la confirmación de contraseña no coincide
+            flash("La contraseña nueva no coincide", "error")
+            return render_template("verficar_contraseña.html",correo=correos)
+
+        hashed_password = generate_password_hash(contraseña_nueva)
+        usuario.contraseña = hashed_password
+        db.session.commit()
+        flash("Se ha cambiado la contraseña correctamente", "success")
+        return redirect(url_for('login'))
+
+    return render_template("verficar_contraseña.html")
+
+
+
+
 
 @app.route("/login",methods=["GET","POST"])
 def login():
