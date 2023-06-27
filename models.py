@@ -69,7 +69,37 @@ class Precio(db.Model):
         self.precio_anterior=precio_anterior
         self.estado=estado
 
+class Servicio(db.Model):
+    __tablename__ = 'servicios'
 
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(80), nullable=False)
+    descripcion = db.Column(db.String(250))
+    foto = db.Column(db.String(250))
+    estado = db.Column(db.Integer)
+
+    def __init__(self, nombre, descripcion, foto, estado):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.foto = foto
+        self.estado = estado
+
+
+class PrecioServicio(db.Model):
+    __tablename__ = 'precio_servicios'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_servicios = db.Column(db.Integer, db.ForeignKey('servicios.id'))
+    precio_actual = db.Column(db.Numeric(10, 2), nullable=False)
+    precio_anterior = db.Column(db.Numeric(10, 2))
+    estado = db.Column(db.Integer)
+
+    servicio = db.relationship('Servicio')
+    def __init__(self, id_servicios, precio_actual, precio_anterior, estado):
+        self.id_servicios = id_servicios
+        self.precio_actual = precio_actual
+        self.precio_anterior = precio_anterior
+        self.estado = estado
 
 class Persona(db.Model):
     __tablename__ = 'persona'

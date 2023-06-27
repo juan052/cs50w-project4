@@ -94,6 +94,13 @@ CREATE TABLE servicios(
     estado INTEGER
 );
 
+CREATE TABLE precio_servicios(
+    id SERIAL PRIMARY KEY,
+    id_servicios INTEGER REFERENCES servicios(id),
+    precio_actual NUMERIC(10,2) NOT NULL,
+    precio_anterior NUMERIC(10,2),
+    estado INTEGER
+);
 
 Create table reservacion
 (

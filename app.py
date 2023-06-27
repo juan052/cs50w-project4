@@ -1,9 +1,12 @@
 import os
 from datetime import datetime
+import random
+import string
 import requests
 import uuid
 from flask import Flask, session, redirect, url_for, render_template, request, flash,jsonify
 from werkzeug.utils import secure_filename
+from flask_mail import Mail, Message
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_session import Session
 from sqlalchemy import create_engine, text
@@ -22,6 +25,13 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 app.config['UPLOAD_FOLDER'] = 'static/img/imagenes'
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'ingsoftwar123@gmail.com'
+app.config['MAIL_PASSWORD'] = 'uwyzadkpqxkxzhvr'
+app.secret_key = 'tu_clave_secreta'
+mail = Mail(app)
 Session(app)
 db.init_app(app)
 
@@ -283,7 +293,7 @@ def producto_actualizar(producto_id):
 @login_required
 def eliminar_producto():
     producto_id = request.form.get("id")
-    print(producto_id)
+    
     productos = Producto.query.get(producto_id)
     
     if productos:
@@ -336,15 +346,34 @@ def actualizar_precio(id):
         precio_actual = request.form.get('precio_actual')
         precio_anterior=request.form.get('precio_anterior')
         estado=request.form.get('estado')
-       
+        if precio_actual and precio_actual.strip():  
+            precio.precio_actual=precio_actual
+            precio.precio_anterior=precio_anterior
+            precio.estado=estado
+            db.session.commit()
+            return redirect(url_for('precio_producto'))
+        else:
+            precio.estado=estado
+            db.session.commit()
+            return redirect(url_for('precio_producto'))
       
-        precio.precio_actual=precio_actual
-        precio.precio_anterior=precio_anterior
-        precio.estado=estado
-        db.session.commit()
-        return redirect(url_for('precio_producto'))
+        
     else:
         return redirect(url_for('precio_Producto'))
+
+@app.route("/eliminar_precio", methods=["POST"])
+@login_required
+def eliminar_precio():
+    id = request.form.get("id")
+    
+    productos = Precio.query.get(id)
+    
+    if productos:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+        productos.estado = 2
+        db.session.commit()
+
+    return redirect(url_for('precio_producto'))
 
 @app.route("/trabajador",methods=["GET","POST"])
 @login_required
@@ -390,6 +419,55 @@ def crear_trabajador():
         return redirect(url_for('trabajador')) 
 
 
+@app.route("/actualizar_trabajador/<int:id>", methods=["GET", "POST"])
+@login_required
+def actualizar_trabajador(id):
+    trabajador = Trabajador.query.get_or_404(id)
+    persona = Persona.query.get_or_404(trabajador.id_persona)
+    personanat = PersonaNatural.query.get_or_404(trabajador.id_persona)
+
+    if request.method == "POST":
+        nombre = request.form.get('nombre')
+        apellido = request.form.get('apellido')
+        cedula = request.form.get('cedula')
+        fecha = request.form.get('fecha_nacimiento')
+        correo = request.form.get('correo')
+        direccion = request.form.get('direccion')
+        genero = request.form.get('genero')
+        celular = request.form.get('celular')
+        estado = request.form.get('estado')
+        logo = trabajador.foto
+         
+        if 'foto' in request.files:
+            archivo_foto = request.files['foto']
+            if archivo_foto:
+                # Eliminar el archivo de foto actual si existe
+                if logo:
+                    eliminar_logo_antigua(logo)
+
+                # Guardar el nuevo archivo de foto
+                filename = str(uuid.uuid4()) + secure_filename(archivo_foto.filename)
+                archivo_foto.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+
+        persona.nombre = nombre
+        persona.correo = correo
+        persona.direccion = direccion
+        persona.celular = celular
+
+        personanat.apellido = apellido
+        personanat.cedula = cedula
+        personanat.fecha_nacimiento = fecha
+        personanat.genero = genero
+
+        trabajador.foto = logo
+        trabajador.estado = estado
+
+        db.session.commit()
+
+        return redirect(url_for('trabajador'))
+    else:
+        return render_template('trabajador.html', trabajador=trabajador, persona=persona, personanat=personanat)
 
 
 
@@ -399,7 +477,16 @@ def crear_trabajador():
 @login_required
 def usuarios():
     trabajadores = Trabajador.query.join(Persona).all()
-    return render_template("usuarios.html", trabajadores=trabajadores)
+    usuarios=Usuario.query.filter_by(id_grupo=1).all()
+    return render_template("usuarios.html", trabajadores=trabajadores,usuarios=usuarios)
+
+
+def generar_contraseña():
+    caracteres = string.ascii_letters + string.digits  # Letras mayúsculas, minúsculas y dígitos
+    longitud = 8
+    contraseña = ''.join(random.choice(caracteres) for _ in range(longitud))
+    return contraseña
+
 
 @app.route("/crear_usuarios",methods=["GET","POST"])
 @login_required
@@ -407,13 +494,97 @@ def crear_usuarios():
     if request.method == "POST":
         persona=request.form.get('id_persona')
         correo = request.form.get('correo')
-        contraseña=request.form.get('contraseña')
+        contraseña=generar_contraseña()
+        cuerpo = '''
+    Estimado(a) ,
+
+    Aquí tienes la contraseña para acceder a tu cuenta:
+
+    Contraseña: {0}
+
+    Por favor, asegúrate de cambiar tu contraseña una vez que hayas iniciado sesión en tu cuenta.
+
+    Si tienes alguna pregunta o necesitas asistencia adicional, no dudes en contactarnos.
+
+    ¡Gracias y ten un excelente día!
+
+    Atentamente, Luxx ART
+    '''.format(contraseña)
+        msg = Message('Asignacion de contraseña - Acceso a cuenta', sender='ingsoftwar123@gmail.com', recipients=[correo])
+        msg.body = cuerpo
+        mail.send(msg)
         hashed_password = generate_password_hash(contraseña)
-        usuario = Usuario(id_grupo=1, id_persona=persona, usuario=correo, contraseña=hashed_password, estado=1)
+        usuario = Usuario(id_grupo=1, id_persona=persona, usuario=correo, contraseña=hashed_password, estado=0)
         db.session.add(usuario)
         db.session.commit()
         return redirect("usuarios")
     return render_template("usuarios.html")
+
+@app.route("/verificar_usuarios",methods=["GET","POST"])
+def verificar():
+    if request.method == "POST":
+        id=request.form.get('id')
+        usuario=Usuario.query.get(id)
+        if usuario:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+            usuario.estado = 1
+            db.session.commit()
+
+        return redirect(url_for('usuarios'))
+    
+    
+    
+    return redirect(url_for('usuarios'))
+
+@app.route("/eliminar_usuario",methods=["GET","POST"])
+def eliminar_usuario():
+    if request.method == "POST":
+        id=request.form.get('id')
+        usuario=Usuario.query.get(id)
+        if usuario:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+            usuario.estado = 2
+            db.session.commit()
+
+        return redirect(url_for('usuarios'))
+    
+    
+    
+    return redirect(url_for('usuarios'))
+
+@app.route("/cambiar_contraseña",methods=["GET","POST"])
+def cambiar_contraseña():
+    if request.method == "POST":
+        id=request.form.get('id')
+        usuario=Usuario.query.get(id)
+        print(usuario)
+        contraseña_anterior=request.form.get('contraseña_actual')
+        contraseña_nueva =request.form.get('contraseña_nueva')
+        confirmacion=request.form.get('confirmacion')
+        usuario = Usuario.query.get(id)
+        if usuario is None:
+         # Manejar el caso cuando el usuario no existe
+            return "El usuario no existe"
+
+  
+        if not check_password_hash(usuario.contraseña, contraseña_anterior):
+        # Manejar el caso cuando la contraseña actual no coincide
+            flash("La contraseña actual no coincide", "error")
+            return redirect(url_for('admin'))
+    
+        if contraseña_nueva != confirmacion:
+            # Manejar el caso cuando la confirmación de contraseña no coincide
+            flash("La contraseña nueva no coinciden.", "error")
+            return redirect(url_for('admin'))
+        
+        hashed_password = generate_password_hash(contraseña_nueva)
+        usuario.contraseña=hashed_password
+        db.session.commit()
+        flash("Se ha cambiado la contraseña correctamente", "Exito")
+        return redirect(url_for('admin'))
+
+    
+    return redirect(url_for('admin'))
 
 @app.route("/login",methods=["GET","POST"])
 def login():
@@ -444,7 +615,7 @@ def validar():
                 session['cliente_celular'] = persona.celular
                 session['cliente_correo']=persona.correo
                 return redirect(url_for('home'))
-            elif usuario_db.id_grupo == 1:
+            elif usuario_db.id_grupo == 1 and usuario_db.estado == 1 :
                 
                  trabajador = Trabajador.query.filter_by(id_persona=usuario_db.id_persona).first()
                  print("trabajador:", trabajador)
@@ -455,8 +626,11 @@ def validar():
                  session['trabajador_nombre'] = persona.nombre
                  session['trabajador_direccion'] = persona.direccion
                  session['trabajador_celular'] = persona.celular
+                 session['id_usuario']=usuario_db.id
                  return redirect(url_for('admin'))
-            
+            else:
+                flash("Acceso denegado.", "error")
+                return  redirect(url_for('login'))
         else:
             flash("Usuario y/o contraseña incorrectos. Acceso denegado.", "error")
            
@@ -674,6 +848,7 @@ def ventas():
 
 
 @app.route('/admin',methods=["GET"])
+@login_required
 def admin():
     # Obtener la fecha y hora actual
     now = datetime.now()
@@ -694,3 +869,137 @@ def admin():
     fecha_actual = now.strftime("%d/%m/%Y")
 
     return render_template("inicio_admin.html", hora_actual=hora_actual,minutos_actuales=minutos_actuales,momento=momento,fecha_actual=fecha_actual)
+
+
+@app.route('/servicios', methods=['POST','GET'])
+@login_required
+def servicios():
+    servicios= Servicio.query.all()
+    return render_template("servicios.html",servicios=servicios)
+
+@app.route('/crear_servicios', methods=['POST','GET'])
+def crear_servicios():
+    nombre = request.form.get('nombre')
+    descripcion = request.form.get('descripcion')
+    logo = None
+    if 'foto' in request.files:
+        logo = request.files['foto']
+        if logo:
+            filename = str(uuid.uuid4()) + secure_filename(logo.filename)
+            logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            logo = filename
+    estado = request.form.get('estado')
+
+    servicio = Servicio(nombre=nombre, descripcion=descripcion, foto=logo, estado=estado)
+    db.session.add(servicio)
+    db.session.commit()
+
+    return redirect('servicios')
+
+@app.route('/actualizar_servicios/<int:servicio_id>', methods=['POST','GET'])
+def actualizar_servicio(servicio_id):
+    servicio = Servicio.query.get(servicio_id)
+
+    if servicio:
+        nombre = request.form.get('nombre')
+        descripcion = request.form.get('descripcion')
+        estado = request.form.get('estado')
+        logo=servicio.foto
+        print(logo)
+        if 'foto' in request.files:
+            nueva_logo = request.files['foto']
+            if nueva_logo:
+                # Eliminar la imagen anterior si existe
+                if logo:
+                    eliminar_logo_antigua(logo)
+                
+                # Guardar la nueva imagen
+                filename = str(uuid.uuid4()) + secure_filename(nueva_logo.filename)
+                nueva_logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+
+        servicio.nombre = nombre
+        servicio.descripcion = descripcion
+        servicio.estado = estado
+        servicio.foto=logo
+        db.session.commit()
+
+        return redirect('/servicios')
+    else:
+        return jsonify({'error': 'No se encontró el servicio'})
+
+
+@app.route('/eliminar_servicio/<int:servicio_id>', methods=['POST','GET'])
+def eliminar_servicio(servicio_id):
+    servicio = Servicio.query.get(servicio_id)
+
+    if servicio:
+        servicio.estado = 2
+        db.session.commit()
+
+        return redirect("/servicios")
+    else:
+        return jsonify({'error': 'No se encontró el servicio'})
+
+
+@app.route("/precio_servicios",methods=["POST","GET"])
+@login_required
+def precio_servicios():
+   Precios=PrecioServicio.query.options(joinedload(PrecioServicio.servicio)).all()
+   servicio=Servicio.query.all()
+   return render_template("precio_servicios.html",Precios=Precios,servicio=servicio)
+
+@app.route("/crear_precio_servicio",methods=["GET","POST"])
+@login_required
+def crear_precio_servicio():
+    if request.method == "POST":
+        id_producto=request.form.get('producto')
+        precio_actual = request.form.get('precio_actual')
+        estado=request.form.get('estado')
+        precio = PrecioServicio(id_servicios=id_producto, precio_actual=precio_actual, precio_anterior=0, estado=estado)
+        db.session.add(precio)
+        db.session.commit()
+
+        return redirect(url_for('precio_servicios'))
+    else:
+        return redirect(url_for('precio_servicios'))
+    
+
+
+@app.route("/actualizar_precio_servicio/<int:id>",methods=["GET","POST"])
+@login_required
+def actualizar_precio_servicio(id):
+    precio = PrecioServicio.query.get(id)
+    if request.method == "POST":
+        
+        precio_actual = request.form.get('precio_actual')
+        precio_anterior=request.form.get('precio_anterior')
+        estado=request.form.get('estado')
+        if precio_actual and precio_actual.strip():  
+            precio.precio_actual=precio_actual
+            precio.precio_anterior=precio_anterior
+            precio.estado=estado
+            db.session.commit()
+            return redirect(url_for('precio_servicios'))
+        else:
+            precio.estado=estado
+            db.session.commit()
+            return redirect(url_for('precio_servicios'))
+        
+    else:
+        return redirect(url_for('/precio_servicios'))
+
+@app.route("/eliminar_precio_servicio", methods=["POST"])
+@login_required
+def eliminar_precio_servicio():
+    id = request.form.get("id")
+    
+    productos = PrecioServicio.query.get(id)
+    
+    if productos:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+        productos.estado = 2
+        db.session.commit()
+
+    return redirect(url_for('precio_servicios'))
+

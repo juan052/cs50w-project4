@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <title>Luxx Art</title>
     <link rel="stylesheet" href="static/css/login.css">
+    <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css">
+<script
+    src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
   </head>
   <body>
     <style>
@@ -32,11 +36,17 @@
   </style>
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-    <ul class="flash-messages">
+    
       {% for message in messages %}
-      <li class="flash-message">{{ message }}</li>
+      <script>
+        Swal.fire(
+  'Error!',
+  '{{message}}',
+  'error'
+)
+     </script>
       {% endfor %}
-    </ul>
+   
     {% endif %}
     {% endwith %}
 
