@@ -445,8 +445,7 @@ def validar():
                 session['cliente_correo']=persona.correo
                 return redirect(url_for('home'))
             elif usuario_db.id_grupo == 1:
-                 print("Entró en el bloque elif")
-                 print("usuario_db.id_grupo:", usuario_db.id_grupo)
+                
                  trabajador = Trabajador.query.filter_by(id_persona=usuario_db.id_persona).first()
                  print("trabajador:", trabajador)
                  persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
@@ -456,12 +455,11 @@ def validar():
                  session['trabajador_nombre'] = persona.nombre
                  session['trabajador_direccion'] = persona.direccion
                  session['trabajador_celular'] = persona.celular
-                 print("Antes de la redirección a 'inicio'")
-                 return redirect(url_for('producto'))
+                 return redirect(url_for('admin'))
             
         else:
             flash("Usuario y/o contraseña incorrectos. Acceso denegado.", "error")
-            print("no entre")
+           
             return redirect(url_for('login'))
     else:
         return render_template("login.html")
@@ -672,3 +670,27 @@ def ventas():
 
 # Pasar los datos a la plantilla
     return render_template('venta.html', ventas=ventas)
+
+
+
+@app.route('/admin',methods=["GET"])
+def admin():
+    # Obtener la fecha y hora actual
+    now = datetime.now()
+
+    # Obtener la hora actual
+    hora_actual = now.hour
+    minutos_actuales = now.minute
+
+    # Determinar si es de mañana, tarde o noche
+    if hora_actual >= 6 and hora_actual < 12:
+        momento = "mañana"
+    elif hora_actual >= 12 and hora_actual < 18:
+        momento = "tarde"
+    else:
+        momento = "noche"
+
+    # Obtener la fecha actual
+    fecha_actual = now.strftime("%d/%m/%Y")
+
+    return render_template("inicio_admin.html", hora_actual=hora_actual,minutos_actuales=minutos_actuales,momento=momento,fecha_actual=fecha_actual)

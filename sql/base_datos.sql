@@ -90,6 +90,7 @@ CREATE TABLE servicios(
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(80) NOT NULL,
     descripcion VARCHAR(250),
+    foto VARCHAR(250),
     estado INTEGER
 );
 
@@ -140,6 +141,21 @@ CREATE TABLE venta_personalizacion(
     total NUMERIC NOT NULL
 );
 
+CREATE TABLE modulo(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(250),
+    icono VARCHAR(500),
+    estado INTEGER 
+);
+
+CREATE TABLE sub_modulo(
+    id SERIAL PRIMARY KEY,
+    id_modulo INTEGER REFERENCES modulo(id),
+    nombre VARCHAR(250) NOT NUll,
+    enlace VARCHAR(500)NOT NULL
+);
+
+
 
 CREATE TABLE grupo_usuarios
 (
@@ -158,4 +174,31 @@ CREATE TABLE usuario
     usuario VARCHAR(200) NOT NULL,
     contraseña VARCHAR(250) NOT NULL,
     estado INTEGER 
+);
+
+CREATE TABLE privilegio_modulo(
+    id SERIAL PRIMARY KEY,
+    id_sub INTEGER REFERENCES submodulo(id),
+    id_usuario INTEGER REFERENCES usuario(id),
+    fecha_registro DATE DEFAULT NOW()
+);
+
+
+CREATE TABLE permiso(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(250)
+);
+
+
+CREATE TABLE permiso_modulo (
+    id SERIAL PRIMARY KEY,
+    id_permiso INTEGER REFERENCES permiso(id),
+    id_modulo INTEGER REFERENCES modulo(id)
+);
+
+
+CREATE TABLE permiso_usuario(
+    id SERIAL PRIMARY KEY,
+    id_permiso_modulo INTEGER REFERENCES permiso_modulo(id),
+    id_usuario INTEGER REFERENCES usuario(id)
 );

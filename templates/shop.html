@@ -39,11 +39,11 @@
 				<div class="icons">
 					{% if 'cliente_foto' in session %}
 					<a href class="foto"><img
-						src="/static/img/imagenes/{{session['cliente_foto']}}" class="foto" alt></a>
+							src="/static/img/imagenes/{{session['cliente_foto']}}" class="foto" alt></a>
 					{% else %}
 					<a href="/login"><i class="ri-user-line"></i></a>
 					{% endif %}
-	
+
 					<a href="/card"><i class="ri-shopping-cart-line"></i></a>
 					<div class="bx bx-menu" id="menu-icon"></div>
 				</div>
@@ -66,34 +66,40 @@
 			<div class="middle-text">
 				<h2>Nuestro producto. <span>100% a mano</span></h2>
 			</div>
-			<form action="/agregar" method="post">
-				<div class="product-content">
-					{% for producto in Precios %}
+
+			<div class="product-content">
+				{% for producto in Precios %}
+				<form action="/agregar" method="post">
 					<div class="box">
 						<div class="box-img">
 							<img src="/static/img/imagenes/{{ producto.producto.logo }}" alt="imagen">
 						</div>
 						<h3>{{ producto.producto.nombre }}</h3>
-						
+
 						<h4>{{ producto.producto.descripcion }}</h4>
 						<div class="inbox">
 							<div>
 								<a href="#" class="price">C${{ producto.precio_actual }}</a>
-								<input type="text" value="{{ producto.producto.id }}" name="producto_id_{{ producto.producto.id }}" hidden>
-								<input type="text" name="cantidad_{{ producto.producto.id }}" value="1" hidden>
+								<input type="text" value="{{ producto.producto.id }}"
+									name="producto_id_{{ producto.producto.id }}" hidden>
+								<input type="text" name="cantidad_{{ producto.producto.id }}" value="1"
+									hidden>
 							</div>
 							<div class="rating">
-								<button class="price" type="submit" data-id="{{ producto.producto.id }}">Agregar al carrito</button>
+
+								<button class="price" type="submit" data-id="{{ producto.producto.id }}">Agregar
+									al carrito</button>
 							</div>
 						</div>
 						<div class="heart">
 							<i class="bx bx-cart-add"></i>
 						</div>
 					</div>
-					{% endfor %}
-				</div>
-			</form>
-			
+				</form>
+
+				{% endfor %}
+			</div>
+
 		</section>
 
 		<!----contact section design---->

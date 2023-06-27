@@ -249,3 +249,4 @@ class DetalleVenta(db.Model):
         self.subtotal = subtotal
         self.descuento = descuento
         self.total = total
+
