@@ -4,11 +4,29 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
+        <link rel="icon" type="image/png" href="/static/img/2.png">
+        <title>Luxx Art ||Registro de usuarios</title>
+        <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css">
+    <script
+        src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
         <link rel="stylesheet" href="/static/css/resgistro.css">
     </head>
     <body>
-
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <script>
+              Swal.fire(
+                '{{ category }}!',
+                '{{ message }}',
+                '{{ category.lower() }}'
+              );
+            </script>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+  
         <div class="content">
 
             <br>
@@ -24,39 +42,6 @@
                 <div class="contact-form">
                     <br>
                     <!-- registro.html -->
-                    <style>
-    /* styles.css */
-
-.flash-message {
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
-.flash-message.success {
-  background-color: #4CAF50;
-  color: #ffffff;
-}
-
-.flash-message.error {
-  background-color: #FF0000;
-  color: #ffffff;
-}
-
-.flash-message.warning {
-  background-color: #FFC107;
-  color: #000000;
-}
-
-</style>
-                    {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                    <ul class="flash-messages">
-                        {% for message in messages %}
-                        <li class="flash-message">{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                    {% endwith %}
 
                     <!-- Resto del contenido del formulario -->
 

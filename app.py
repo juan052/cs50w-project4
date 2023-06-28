@@ -1105,3 +1105,150 @@ def eliminar_precio_servicio():
 
     return redirect(url_for('precio_servicios'))
 
+#Clientes
+@app.route("/clientes",methods=["POST","GET"])
+@login_required
+def cliente():
+    clientes=Cliente.query.options(joinedload(Cliente.persona)).all()
+    return render_template("cliente.html",clientes=clientes)
+
+
+@app.route('/crear_cliente', methods=["GET", "POST"])
+@login_required
+def crear_cliente():
+    if request.method == "POST":
+        # Obtener los datos del formulario
+        nombre = request.form.get("nombre")
+        apellido = request.form.get("apellido")
+        telefono = request.form.get("celular")
+        fecha_nacimiento = request.form.get("fecha")
+        cedula = request.form.get("cedula")
+        genero = request.form.get("genero")
+        email = request.form.get("email")
+        tipo=request.form.get("tipo")
+        direccion = request.form.get("direccion")
+        logo = None
+        if 'foto' in request.files:
+            logo = request.files['foto']
+            if logo:
+                filename = str(uuid.uuid4()) + secure_filename(logo.filename)
+                logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+        
+        
+     
+
+        # Crear una instancia de Persona y PersonaNatural
+        persona = Persona(nombre=nombre, correo=email, direccion=direccion, celular=telefono)
+        persona_natural = PersonaNatural(id_persona=persona.id, apellido=apellido, cedula=cedula, fecha_nacimiento=fecha_nacimiento, genero=genero)
+
+        # Asociar Persona y PersonaNatural
+        persona.persona_natural = persona_natural
+
+        # Realizar las acciones necesarias para guardar los modelos en la base de datos
+        db.session.add(persona)
+        db.session.commit()
+
+      
+        # Crear una instancia de Cliente y asociarla a Persona
+        cliente = Cliente(id_persona=persona.id, tipo_cliente=tipo, foto=logo, estado=1)
+        persona.cliente = cliente
+
+        # Agregar los objetos a la sesión de la base de datos y confirmar los cambios
+       
+        db.session.add(cliente)
+        db.session.commit()
+
+        # Redirigir al usuario a la página de inicio de sesión después del registro exitoso
+        return redirect('/clientes')
+
+    return render_template('cliente.html')
+
+
+@app.route('/actualizar_cliente/<int:id>', methods=["GET", "POST"])
+@login_required
+def actualizar_cliente(id):
+   
+    cliente = Cliente.query.get(id)
+    print(cliente)
+    if request.method == "POST":
+        # Obtener los datos del formulario
+        nombre = request.form.get("nombre")
+        apellido = request.form.get("apellido")
+        telefono = request.form.get("celular")
+        fecha_nacimiento = request.form.get("fecha_nacimiento")
+        cedula = request.form.get("cedula")
+        genero = request.form.get("genero")
+        email = request.form.get("correo")
+        tipo = request.form.get("tipo")
+        direccion = request.form.get("direccion")
+        estado=request.form.get("estado")
+        logo = cliente.foto
+        if 'foto' in request.files:
+            archivo_foto = request.files['foto']
+            if archivo_foto:
+                # Eliminar el archivo de foto actual si existe
+                if logo:
+                    eliminar_logo_antigua(logo)
+
+                # Guardar el nuevo archivo de foto
+                filename = str(uuid.uuid4()) + secure_filename(archivo_foto.filename)
+                archivo_foto.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                logo = filename
+
+       
+        # Actualizar los datos del cliente existente
+        cliente.persona.nombre = nombre
+        cliente.persona.correo = email
+        cliente.persona.direccion = direccion
+        cliente.persona.celular = telefono
+        cliente.persona.persona_natural.apellido = apellido
+        cliente.persona.persona_natural.cedula = cedula
+        cliente.persona.persona_natural.fecha_nacimiento = fecha_nacimiento
+        cliente.persona.persona_natural.genero = genero
+        cliente.tipo_cliente = tipo
+        cliente.foto = logo
+        cliente.estado=estado
+        db.session.add(cliente)
+        db.session.commit()
+        print("--------Estado aqui abajo de esta linea")
+        print(estado)
+        print("---------------------------------------------------")
+        if int(estado) == 1:
+            usuario=Usuario.query.filter_by(id_persona=cliente.id_persona).first()
+            print(cliente.id_persona)
+            print("-----------------------------------------------------")
+            print(usuario)
+            print("---------------------------------------------------------")
+            if usuario:
+            # Cambiar el estado de la categoría a inactivo (estado = 2)
+                usuario.estado = 1
+                print("Se cambio estado")
+                db.session.commit()
+
+        return redirect('/clientes')
+
+    return redirect('/clientes')
+
+
+@app.route("/eliminar_cliente",methods=["GET","POST"])
+def eliminar_cliente():
+    if request.method == "POST":
+        id=request.form.get('id')
+        trabajador=Cliente.query.get(id)
+        if trabajador:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+            trabajador.estado = 2
+            db.session.commit()
+
+        usuario=Usuario.query.filter_by(id_persona=trabajador.id_persona).first()
+        if usuario:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+            usuario.estado = 2
+            db.session.commit()
+
+        return redirect('/clientes')
+    
+    
+    
+    return redirect('/clientes')
