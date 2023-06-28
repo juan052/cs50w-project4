@@ -17,17 +17,9 @@
 </section>
 <section class="content">
     <div class="container-fluid">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{message}}
-         
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-        <h5 class="mb-2">Buenas {{momento}}s, {{session['trabajador_nombre']}}</h5>
+    
+    
+        <h5 class="mb-2">Buenas {{momento}}, {{session['trabajador_nombre']}}</h5>
         <div class="row">
 
             <!-- /.col -->
@@ -134,7 +126,6 @@
             </div>
         </div>
     </div>
-
 
 </section>
 {% endblock %}

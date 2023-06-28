@@ -186,6 +186,12 @@ class Salario(db.Model):
     salario_actual = db.Column(db.Numeric(10,2), nullable=False)
     salario_anterior = db.Column(db.Numeric(10,2))
     estado = db.Column(db.Integer)
+    trabajador= relationship('Trabajador')
+    def __init__(self,id_trabajador,salario_actual,salario_anterior,estado):
+        self.id_trabajador=id_trabajador
+        self.salario_actual=salario_actual
+        self.salario_anterior=salario_anterior
+        self.estado=estado
 
 
 class Cliente(db.Model):
@@ -225,6 +231,7 @@ class Usuario(db.Model):
     usuario = db.Column(db.String(200), nullable=False)
     contraseña = db.Column(db.String(250), nullable=False)
     estado = db.Column(db.Integer)
+    grupo = relationship('GrupoUsuarios')
 
     def __init__(self, id_grupo, id_persona, usuario, contraseña, estado):
         self.id_grupo = id_grupo

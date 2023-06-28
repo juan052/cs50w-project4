@@ -9,13 +9,14 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_session import Session
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, not_,and_
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_sqlalchemy import SQLAlchemy
 from models import *
 from helper import *
 from helper1 import *
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql import exists, not_
 app = Flask(__name__)
 
 # Check for environment variable
@@ -110,13 +111,6 @@ def shop():
     
    
 
-@app.route("/inicio")
-@login_required
-def inicio():
-    usuario = session.get('trabajador_id')
-    return render_template('inicio.html',usuario=usuario)
-
-
 @app.route("/categoria")
 @login_required
 def categoria():
@@ -133,9 +127,11 @@ def crear_categoria():
         categoria = CategoriaProducto(nombre=nombre, descripcion=descripcion, estado=estado)
         db.session.add(categoria)
         db.session.commit()
+        flash("Se ha creado la nueva categoria","success")
         return redirect(url_for('categoria'))
     else:
-        return render_template('categoria.html')
+        flash("No se ha creado la categoria","error")
+        return redirect(url_for('categoria'))
     
 @app.route("/editar_categoria/<int:id>", methods=["GET", "POST"])
 @login_required
@@ -146,8 +142,10 @@ def editar_categoria(id):
         categoria.descripcion = request.form.get('descripcion')
         categoria.estado = request.form.get('estado')
         db.session.commit()
+        flash("Se ha actualizado la categoria","success")
         return redirect(url_for('categoria'))
     else:
+       flash("No se ha actualizado la categoria","error")
        return redirect(url_for('categoria'))
     
 @app.route("/eliminar_categoria", methods=["POST"])
@@ -160,7 +158,9 @@ def eliminar_categoria():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
         categoria.estado = 2
         db.session.commit()
+        flash("No se ha desactivado la categoria","success")
 
+    flash("No se ha desactivado la categoria","error")
     return redirect(url_for('categoria'))
 
 @app.route("/sub")
@@ -182,10 +182,11 @@ def crear_sub():
         sub = SubCategoriaProducto(id_categoria=categoria,nombre=nombre, descripcion=descripcion, estado=estado)
         db.session.add(sub)
         db.session.commit()
-        
+        flash("Se ha creado la Sub scategoria","success")
         return redirect(url_for('sub'))
     else:
-        return render_template('sub_categoria.html')
+        flash("No se ha creado la sub categoria","error")
+        return redirect('/sub')
     
 
 @app.route("/sub_actualizar/<int:id>", methods=["GET", "POST"])
@@ -198,8 +199,11 @@ def sub_actualizar(id):
         sub.descripcion = request.form.get('descripcion')
         sub.estado = request.form.get('estado')
         db.session.commit()
+        flash("Se ha actualizado la sub categoria","success")
         return redirect(url_for('sub'))
+    
     else:
+        flash("No se ha actualizado la  sub categoria","error")
         return render_template('sub_categoria.html')
 
 
@@ -213,6 +217,7 @@ def eliminar_sub():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
         subcategoria.estado = 2
         db.session.commit()
+        flash("No se ha desactivado la categoria","succces")
 
     return redirect(url_for('sub'))
 
@@ -247,8 +252,10 @@ def producto_crear():
         producto=Producto(id_sub_categoria=id_sub_categoria, nombre=nombre, descripcion=descripcion, cantidad=cantidad,logo=logo, estado=estado)
         db.session.add(producto)
         db.session.commit()
+        flash("Se ha creado el producto","success")
         return redirect(url_for('producto'))
     else:
+        flash("No se ha creado el producto","error")
         return redirect(url_for('producto'))
     
 
@@ -285,8 +292,10 @@ def producto_actualizar(producto_id):
         producto.estado = estado
 
         db.session.commit()
+        flash("Se ha actualizado el producto","success")
         return redirect(url_for('producto'))
     else:
+        flash("No se ha actualizado el producto","error")
         return redirect(url_for('producto'))
 
 @app.route("/eliminar_producto", methods=["POST"])
@@ -300,6 +309,7 @@ def eliminar_producto():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
         productos.estado = 2
         db.session.commit()
+        flash("Se ha desactivado el producto","success")
 
     return redirect(url_for('producto'))
 
@@ -330,9 +340,10 @@ def crear_precio():
         precio = Precio(id_producto=id_producto, precio_actual=precio_actual, precio_anterior=0, estado=estado)
         db.session.add(precio)
         db.session.commit()
-
+        flash("Se ha asignado correctamente el precio","success")
         return redirect(url_for('precio_producto'))
     else:
+        flash("No se ha asignado el precio correctamente","error")
         return redirect(url_for('precio_producto'))
     
 
@@ -351,10 +362,12 @@ def actualizar_precio(id):
             precio.precio_anterior=precio_anterior
             precio.estado=estado
             db.session.commit()
+            flash("Se ha actualizado correctamente el precio","success")
             return redirect(url_for('precio_producto'))
         else:
             precio.estado=estado
             db.session.commit()
+            flash("Se ha actualizado correctamente el estado del precio","success")
             return redirect(url_for('precio_producto'))
       
         
@@ -414,8 +427,10 @@ def crear_trabajador():
         colaborador=Trabajador(id_persona=id_persona,foto=logo,estado=estado)
         db.session.add(colaborador)
         db.session.commit()
+        flash("Se ha agreado correctamente el colaborador","success")
         return redirect(url_for('trabajador'))
     else:
+        flash("No se agrego ningun colaborador","error")
         return redirect(url_for('trabajador')) 
 
 
@@ -464,7 +479,7 @@ def actualizar_trabajador(id):
         trabajador.estado = estado
 
         db.session.commit()
-
+        flash("Se ha actualizado correctamente el colaborador","success")
         return redirect(url_for('trabajador'))
     else:
         return render_template('trabajador.html', trabajador=trabajador, persona=persona, personanat=personanat)
@@ -484,7 +499,7 @@ def eliminar_colaborador():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
             usuario.estado = 2
             db.session.commit()
-
+        flash("Se ha desactivado correctamente el colaborador","success")
         return redirect(url_for('trabajador'))
     
     
@@ -492,12 +507,80 @@ def eliminar_colaborador():
     return redirect(url_for('trabajador'))
 
 
+@app.route("/salarios",methods=["POST","GET"])
+@login_required
+def salario():
+    salarios=Salario.query.options(joinedload(Salario.trabajador)).all()
+    trabajadores_sin_salario = Trabajador.query.filter(
+    not_(exists().where(Salario.id_trabajador == Trabajador.id))).all()
+    return render_template("salarios.html",salarios=salarios,trabajadores_sin_salario=trabajadores_sin_salario)
+
+@app.route("/crear_salarios",methods=["POST","GET"])
+@login_required
+def crear_salario():
+    if request.method == "POST":
+        id_trabajador=request.form.get('producto')
+        print(id_trabajador)
+        salario_actual = request.form.get('precio_actual')
+        estado=request.form.get('estado')
+        precio = Salario(id_trabajador=id_trabajador, salario_actual=salario_actual, salario_anterior=0, estado=estado)
+        db.session.add(precio)
+        db.session.commit()
+        flash("Se ha asignado correctamente el salario","success")
+        return redirect('/salarios')
+    else:
+        flash("No se ha asignado ningun salario","error")
+        return redirect('/salarios')
+    
+@app.route("/actualizar_salarios/<int:id>",methods=["POST","GET"])
+@login_required
+def actualizar_salario(id):
+    precio = Salario.query.get(id)
+    if request.method == "POST":
+        
+        precio_actual = request.form.get('precio_actual')
+        precio_anterior=request.form.get('precio_anterior')
+        estado=request.form.get('estado')
+        if precio_actual and precio_actual.strip():  
+            precio.salario_actual=precio_actual
+            precio.salario_anterior=precio_anterior
+            precio.estado=estado
+            db.session.commit()
+            flash("Se ha realizado correctamente la asignacion del nuevo salario","success")
+            return redirect('/salarios')
+        else:
+            print("No se realizo el cambio")
+            precio.estado=estado
+            db.session.commit()
+            return redirect('/salarios')
+    return redirect('/salarios')
+
+@app.route("/eliminar_salarios",methods=["POST","GET"])
+@login_required
+def eliminar_salario():
+    id = request.form.get("id")
+    
+    productos = Salario.query.get(id)
+    
+    if productos:
+        # Cambiar el estado de la categoría a inactivo (estado = 2)
+        productos.estado = 2
+        db.session.commit()
+        flash("Se desactivado el salario","success")
+        return redirect('/salarios')
+    
+    return redirect('/salarios')
+
+
 #Usuarios
 @app.route("/usuarios",methods=["GET","POST"])
 @login_required
 def usuarios():
-    trabajadores = Trabajador.query.join(Persona).all()
-    usuarios=Usuario.query.filter_by(id_grupo=1).all()
+    
+    usuarios = Usuario.query.order_by(Usuario.id_grupo).all()
+    trabajadores = Trabajador.query.outerjoin(Usuario, and_(Usuario.id_persona == Trabajador.id_persona)).filter(Usuario.id_persona.is_(None)).all()
+    
+
     return render_template("usuarios.html", trabajadores=trabajadores,usuarios=usuarios)
 
 
@@ -537,6 +620,8 @@ def crear_usuarios():
         usuario = Usuario(id_grupo=1, id_persona=persona, usuario=correo, contraseña=hashed_password, estado=0)
         db.session.add(usuario)
         db.session.commit()
+        flash("Se agregado correctamente el usuario!","success")
+        flash("Se ha enviado un correo correctamente con la contraseña para su accesso ala plataforma ","info")
         return redirect("usuarios")
     return render_template("usuarios.html")
 
@@ -544,23 +629,40 @@ def crear_usuarios():
 def verificar():
     if request.method == "POST":
         id=request.form.get('id')
-        usuario=Usuario.query.get(id)
-        trabajador=Trabajador.query.filter_by(id_persona=usuario.id_persona).first()
-        if trabajador.estado == 2:
-            flash("No se puede activar el usuario, el trabajador es inactivo","Error")
-            return  redirect(url_for('usuarios'))
-        
-        else:
-            if usuario:
-            # Cambiar el estado de la categoría a inactivo (estado = 2)
-                usuario.estado = 1
-                db.session.commit()
+        usuario = Usuario.query.get(id)
+        trabajador = Trabajador.query.filter_by(id_persona=usuario.id_persona).first()
+        cliente = Clientes.query.filter_by(id_persona=usuario.id_persona).first()
 
+        if trabajador :
+            if trabajador.estado == 2:
+                flash("No se puede activar el usuario, el trabajador está inactivo", "Error")
                 return redirect(url_for('usuarios'))
-    
-    
-    
+            else:
+                if usuario:
+                    print("Hola estoy aqui")
+                    # Cambiar el estado del usuario a verificado (estado = 1)
+                    usuario.estado = 1
+                    db.session.commit()
+                    flash("Se ha verificado el usuario correctamente", "success")
+                    return redirect(url_for('usuarios'))
+                
+        if cliente:
+            if cliente.estado == 2:
+                flash("No se puede activar el usuario, el cliente está inactivo", "Error")
+                return redirect(url_for('usuarios'))
+            else:
+                if usuario:
+                    print("Hola estoy aqui")
+                    # Cambiar el estado del usuario a verificado (estado = 1)
+                    usuario.estado = 1
+                    db.session.commit()
+                    flash("Se ha verificado el usuario correctamente", "success")
+                    return redirect(url_for('usuarios'))
+
+        flash("No se ha realizado ninguna operación", "error")
+
     return redirect(url_for('usuarios'))
+
 
 @app.route("/eliminar_usuario",methods=["GET","POST"])
 def eliminar_usuario():
@@ -571,7 +673,7 @@ def eliminar_usuario():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
             usuario.estado = 2
             db.session.commit()
-
+        flash("Se ha desactivado el usuario correctamente","success")
         return redirect(url_for('usuarios'))
     
     
@@ -607,7 +709,7 @@ def cambiar_contraseña():
         hashed_password = generate_password_hash(contraseña_nueva)
         usuario.contraseña=hashed_password
         db.session.commit()
-        flash("Se ha cambiado la contraseña correctamente", "Exito")
+        flash("Se ha cambiado la contraseña correctamente", "success")
         return redirect(url_for('admin'))
 
     
@@ -651,11 +753,7 @@ def nueva_contraseña():
     
     if request.method == "POST":
         correos=request.form.get('correo')
-        print("Coreo----------------------")
-        print(correos)
-        print("Correo--------------")
         usuario = Usuario.query.filter_by(usuario=correos).first()
-        print(usuario)
         contraseña_anterior = request.form.get('codigo_verficacion')
         contraseña_nueva = request.form.get('contraseña_nueva')
         confirmacion = request.form.get('confirmacion')
@@ -706,7 +804,7 @@ def validar():
 
         if usuario_db and check_password_hash(usuario_db.contraseña, contraseña):
             # Las contraseñas coinciden, el usuario es válido
-            if usuario_db.id_grupo == 2:
+            if usuario_db.id_grupo == 2 and usuario_db.estado ==1:
                 
                 cliente = Cliente.query.filter_by(id_persona=usuario_db.id_persona).first()
                 persona = Persona.query.filter_by(id=usuario_db.id_persona).first()
@@ -716,7 +814,7 @@ def validar():
                 session['cliente_direccion'] = persona.direccion
                 session['cliente_celular'] = persona.celular
                 session['cliente_correo']=persona.correo
-                return redirect(url_for('home'))
+                return redirect(url_for('home'))            
             elif usuario_db.id_grupo == 1 and usuario_db.estado == 1 :
                 
                  trabajador = Trabajador.query.filter_by(id_persona=usuario_db.id_persona).first()
@@ -729,6 +827,7 @@ def validar():
                  session['trabajador_direccion'] = persona.direccion
                  session['trabajador_celular'] = persona.celular
                  session['id_usuario']=usuario_db.id
+                 flash("Bienvenido(a), "+persona.nombre, "success")
                  return redirect(url_for('admin'))
             else:
                 flash("Acceso denegado.", "error")
@@ -842,7 +941,6 @@ def registro():
 @app.route('/registrase', methods=["GET", "POST"])
 def registrase():
     if request.method == "POST":
-        # Obtener los datos del formulario
         nombre = request.form.get("nombre")
         apellido = request.form.get("apellido")
         telefono = request.form.get("telefono")
@@ -863,36 +961,22 @@ def registrase():
         
         usuario_existente = Usuario.query.filter_by(usuario=email).first()
         if usuario_existente:
-            # El email ya está registrado, mostrar mensaje de error
             flash("El email ya está registrado", "error")
             return redirect('/registrase')
 
-        # Crear una instancia de Persona y PersonaNatural
         persona = Persona(nombre=nombre, correo=email, direccion=direccion, celular=telefono)
         persona_natural = PersonaNatural(id_persona=persona.id, apellido=apellido, cedula=cedula, fecha_nacimiento=fecha_nacimiento, genero=genero)
-
-        # Asociar Persona y PersonaNatural
         persona.persona_natural = persona_natural
-
-        # Realizar las acciones necesarias para guardar los modelos en la base de datos
         db.session.add(persona)
         db.session.commit()
-
-        # Generar el hash de la contraseña
         hashed_password = generate_password_hash(contraseña)
         usuario = Usuario(id_grupo=2, id_persona=persona.id, usuario=email, contraseña=hashed_password, estado=1)
         persona.usuario = usuario
-
-        # Crear una instancia de Cliente y asociarla a Persona
         cliente = Cliente(id_persona=persona.id, tipo_cliente="Normal", foto=logo, estado=1)
         persona.cliente = cliente
-
-        # Agregar los objetos a la sesión de la base de datos y confirmar los cambios
         db.session.add(usuario)
         db.session.add(cliente)
         db.session.commit()
-
-        # Redirigir al usuario a la página de inicio de sesión después del registro exitoso
         return redirect('/login')
 
     return render_template('registro_usuario.html')
@@ -901,26 +985,16 @@ def registrase():
 
 @app.route('/guardar_venta', methods=['POST'])
 def guardar_venta():
-    # Obtener los datos de la venta desde la solicitud
     id_tipo = request.form.get('id_tipo')
     id_cliente = session['cliente_id']
     fecha = request.form.get('fecha')
     estado = request.form.get('estado')
     fecha_actual = datetime.now()
-
-    # Formatear la fecha en formato PostgreSQL
     fecha_postgresql = fecha_actual.strftime('%Y-%m-%d')
-    # Crear una instancia de Venta
     venta = Venta(id_tipo=1, id_cliente=id_cliente, fecha=fecha_postgresql, estado=1)
     db.session.add(venta)
-
-    db.session.commit()
-
-    # Obtener los detalles de la venta desde la solicitud
-    # Obtener los detalles de la venta desde la sesión
+    db.session.commit()   
     detalles = session.get('detalles_venta', [])
-
-    # Crear instancias de DetalleVenta y asociarlas a la venta
     for detalle in detalles:
         id_producto = detalle['id']
         subtotal = detalle['precio'] * detalle['cantidad']
@@ -961,11 +1035,11 @@ def admin():
 
     # Determinar si es de mañana, tarde o noche
     if hora_actual >= 6 and hora_actual < 12:
-        momento = "mañana"
+        momento = "dias"
     elif hora_actual >= 12 and hora_actual < 18:
-        momento = "tarde"
+        momento = "tardes"
     else:
-        momento = "noche"
+        momento = "noches"
 
     # Obtener la fecha actual
     fecha_actual = now.strftime("%d/%m/%Y")
@@ -995,7 +1069,7 @@ def crear_servicios():
     servicio = Servicio(nombre=nombre, descripcion=descripcion, foto=logo, estado=estado)
     db.session.add(servicio)
     db.session.commit()
-
+    flash("Se ha creado correctamente el servicios","success")
     return redirect('servicios')
 
 @app.route('/actualizar_servicios/<int:servicio_id>', methods=['POST','GET'])
@@ -1025,7 +1099,7 @@ def actualizar_servicio(servicio_id):
         servicio.estado = estado
         servicio.foto=logo
         db.session.commit()
-
+        flash("Se ha actualizado correctamente el servicios","success")
         return redirect('/servicios')
     else:
         return jsonify({'error': 'No se encontró el servicio'})
@@ -1038,7 +1112,7 @@ def eliminar_servicio(servicio_id):
     if servicio:
         servicio.estado = 2
         db.session.commit()
-
+        flash("se ha desactivado el servicio","success")
         return redirect("/servicios")
     else:
         return jsonify({'error': 'No se encontró el servicio'})
@@ -1061,7 +1135,7 @@ def crear_precio_servicio():
         precio = PrecioServicio(id_servicios=id_producto, precio_actual=precio_actual, precio_anterior=0, estado=estado)
         db.session.add(precio)
         db.session.commit()
-
+        flash("Se ha asignado correctamen el precio al servicios","success")
         return redirect(url_for('precio_servicios'))
     else:
         return redirect(url_for('precio_servicios'))
@@ -1082,6 +1156,7 @@ def actualizar_precio_servicio(id):
             precio.precio_anterior=precio_anterior
             precio.estado=estado
             db.session.commit()
+            flash("Se ha actualizado el precio correctamente","success")
             return redirect(url_for('precio_servicios'))
         else:
             precio.estado=estado
@@ -1102,7 +1177,7 @@ def eliminar_precio_servicio():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
         productos.estado = 2
         db.session.commit()
-
+    flash("Se ha desactivado el precio correctamente")
     return redirect(url_for('precio_servicios'))
 
 #Clientes
@@ -1160,6 +1235,7 @@ def crear_cliente():
         db.session.commit()
 
         # Redirigir al usuario a la página de inicio de sesión después del registro exitoso
+        flash("Se ha agregado correctamente el nuevo cliente","success")
         return redirect('/clientes')
 
     return render_template('cliente.html')
@@ -1211,21 +1287,13 @@ def actualizar_cliente(id):
         cliente.estado=estado
         db.session.add(cliente)
         db.session.commit()
-        print("--------Estado aqui abajo de esta linea")
-        print(estado)
-        print("---------------------------------------------------")
         if int(estado) == 1:
             usuario=Usuario.query.filter_by(id_persona=cliente.id_persona).first()
-            print(cliente.id_persona)
-            print("-----------------------------------------------------")
-            print(usuario)
-            print("---------------------------------------------------------")
             if usuario:
             # Cambiar el estado de la categoría a inactivo (estado = 2)
                 usuario.estado = 1
-                print("Se cambio estado")
                 db.session.commit()
-
+        flash("Se ha actualizado correctamente el cliente","success")
         return redirect('/clientes')
 
     return redirect('/clientes')
@@ -1240,15 +1308,21 @@ def eliminar_cliente():
         # Cambiar el estado de la categoría a inactivo (estado = 2)
             trabajador.estado = 2
             db.session.commit()
+        
 
         usuario=Usuario.query.filter_by(id_persona=trabajador.id_persona).first()
         if usuario:
         # Cambiar el estado de la categoría a inactivo (estado = 2)
             usuario.estado = 2
             db.session.commit()
-
+        flash("Se ha desactivado correctamente el cliente","success")
         return redirect('/clientes')
     
     
     
     return redirect('/clientes')
+
+
+
+
+
