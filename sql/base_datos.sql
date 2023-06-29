@@ -102,16 +102,29 @@ CREATE TABLE precio_servicios(
     estado INTEGER
 );
 
-Create table reservacion
+
+Create table personalizacion
 (
     id SERIAL PRIMARY KEY,
+    id_cliente INTEGER REFERENCES clientes(id),
     descripcion VARCHAR(250),
-    fecha_de_entrega DATE,
-    foto VARCHAR(150),
-    precio NUMERIC,
+    fotos VARCHAR(150),
+    presupuesto NUMERIC,
     estado INTEGER
 );
 
+CREATE TABLE detalle_personalizacion(
+    id SERIAL PRIMARY KEY,
+    id_personalizacion INTEGER REFERENCES personalizacion(id),
+    costo_total NUMERIC,
+    nota TEXT,
+    fecha_entrega DATE
+    
+);
+
+/**
+*Pedidos y personalizaciones
+*/
 
 CREATE TABLE tipo_venta (
     id SERIAL PRIMARY KEY,
@@ -124,6 +137,7 @@ CREATE TABLE venta(
     id SERIAL PRIMARY KEY,
     id_tipo INTEGER REFERENCES tipo_venta(id),
     id_cliente INTEGER REFERENCES clientes(id),
+    codigo VARCHAR(100),
     fecha DATE,
     estado INTEGER
 );
@@ -142,7 +156,16 @@ CREATE TABLE detalle_venta
 CREATE TABLE venta_personalizacion(
     id SERIAL PRIMARY KEY,
     id_venta INTEGER REFERENCES venta(id),
-    id_reservacion INTEGER REFERENCES reservacion(id),
+    id_personalizacion INTEGER REFERENCES personalizacion(id),
+    subtotal numeric NOT NUll,
+    descuento NUMERIC NOT NULL,
+    total NUMERIC NOT NULL
+);
+
+CREATE TABLE venta_servicios(
+    id SERIAL PRIMARY KEY,
+    id_venta INTEGER REFERENCES venta(id),
+    id_reservacion INTEGER REFERENCES servicios(id),
     subtotal numeric NOT NUll,
     descuento NUMERIC NOT NULL,
     total NUMERIC NOT NULL

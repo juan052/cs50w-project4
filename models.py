@@ -252,6 +252,42 @@ class TipoVenta(db.Model):
         self.nombre = nombre
         self.descripcion = descripcion
         self.estado = estado 
+class Personalizacion(db.Model):
+    __tablename__ = 'personalizacion'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id'))
+    descripcion = db.Column(db.String(250))
+    fotos = db.Column(db.String(150))
+    presupuesto = db.Column(db.Numeric)
+    estado = db.Column(db.Integer)
+    cliente = relationship('Cliente')
+
+    def __init__(self,id_cliente, descripcion, fotos, presupuesto, estado):
+        self.id_cliente=id_cliente
+        self.descripcion = descripcion
+        self.fotos = fotos
+        self.presupuesto = presupuesto
+        self.estado = estado
+
+
+class DetallePersonalizacion(db.Model):
+    __tablename__ = 'detalle_personalizacion'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_personalizacion = db.Column(db.Integer, db.ForeignKey('personalizacion.id'))
+    costo_total = db.Column(db.Numeric)
+    nota = db.Column(db.Text)
+    fecha_entrega = db.Column(db.Date)
+
+    personalizacion = db.relationship('Personalizacion')
+
+    def __init__(self, id_personalizacion, costo_total, nota, fecha_entrega):
+        self.id_personalizacion = id_personalizacion
+        self.costo_total = costo_total
+        self.nota = nota
+        self.fecha_entrega = fecha_entrega
+
 class Venta(db.Model):
     __tablename__ = 'venta'
 

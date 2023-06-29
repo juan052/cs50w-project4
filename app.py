@@ -1322,6 +1322,10 @@ def eliminar_cliente():
     
     return redirect('/clientes')
 
+@app.route('/personalizaciones', methods=['POST'])
+def personalizaciones():
+    return render_template("personalizacion.html")
+
 
 
 
