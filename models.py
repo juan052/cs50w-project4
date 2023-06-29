@@ -323,3 +323,27 @@ class DetalleVenta(db.Model):
         self.descuento = descuento
         self.total = total
 
+
+class Modulo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(250))
+    icono = db.Column(db.String(500))
+    estado = db.Column(db.Integer)
+   
+    def __init__(self, nombre, icono, estado):
+        self.nombre = nombre
+        self.icono = icono
+        self.estado = estado
+
+class SubModulo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_modulo = db.Column(db.Integer, db.ForeignKey('modulo.id'))
+    nombre = db.Column(db.String(250), nullable=False)
+    enlace = db.Column(db.String(500), nullable=False)
+
+    modulo = db.relationship('Modulo')
+
+    def __init__(self, id_modulo, nombre, enlace):
+        self.id_modulo = id_modulo
+        self.nombre = nombre
+        self.enlace = enlace

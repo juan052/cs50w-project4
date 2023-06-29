@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %} || Categoria{% endblock %}
+{% block title %} || Pedidos{% endblock %}
 {% block css %}
 <link rel="stylesheet"
     href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -13,12 +13,12 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1>Categorias de productos</h1>
+                <h1>Pedidos de personalizados</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="#">Gestion de Productos</a></li>
-                    <li class="breadcrumb-item active">Categorias</li>
+                    <li class="breadcrumb-item"><a href="#">Gestion de Pedidos</a></li>
+                    <li class="breadcrumb-item active">Pedidos</li>
                 </ol>
             </div>
         </div>
@@ -30,7 +30,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Lista de categorias</h3>
+                        <h3 class="card-title">Lista de pedidos</h3>
                         <div class="align-content-end text-right">
                             <button type="button" class="btn btn-secondary"
                                 data-toggle="modal" data-target="#modal-default">Agregar
@@ -45,9 +45,12 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Tipo de cliente</th>
                                     <th>Nombre</th>
                                     <th>Descripcion</th>
+                                    <th>Presupuesto</th>
                                     <th>Estado</th>
+                                    <th>Foto de inspiracion</th>
                                     <th>Accion</th>
                                 </tr>
                             </thead>
@@ -55,14 +58,18 @@
                                 {%for categoria in pedido%}
                                 <tr>
                                     <td>{{loop.index}}</td>
+                                    <td>{{categoria.cliente.tipo_cliente}}</td>
                                     <td>
                                         {{categoria.cliente.persona.nombre}}
                                     </td>
                                     <td>{{categoria.descripcion}}</td>
+                                    <th>C$ {{categoria.presupuesto}}</th>
                                     <td>
                                         {%if categoria.estado == 0%}
-                                        <span class="badge bg-success">Solicitado</span>
+                                        <span class="badge bg-warning">Solicitado</span>
                                         {%elif categoria.estado== 1%}
+                                        <span class="badge bg-success">Activo</span>
+                                        {% else %}
                                         <span class="badge bg-danger">Inactivo</span>
                                         {%endif%}
                                     </td>
@@ -132,7 +139,7 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
-    {% for categoria in categorias %}
+    {% for categoria in pedidos %}
     <div class="modal fade" id="modal-default{{categoria.id}}">
         <div class="modal-dialog">
             <div class="modal-content">

@@ -1355,7 +1355,44 @@ def personalizacion():
 
 
 @app.route('/personalizaciones', methods=['POST','GET'])
+@login_required
 def personalizaciones():
     pedido=Personalizacion.query.all()
+   
     return render_template("personalizacion.html",pedido=pedido)
+
+
+
+@app.route('/modulos')
+def obtener_modulos_con_submodulos():
+    resultados = db.session.query(Modulo.id.label('modulo_id'), Modulo.nombre.label('modulo_nombre'),
+                                 SubModulo.id.label('submodulo_id'), SubModulo.nombre.label('submodulo_nombre')) \
+        .outerjoin(SubModulo, Modulo.id == SubModulo.id_modulo) \
+        .all()
+
+    resultado_final = []
+    modulo_actual = None
+    submodulos_actual = []
+
+    for resultado in resultados:
+        if resultado.modulo_id != modulo_actual:
+            if modulo_actual is not None:
+                resultado_final.append({'modulo': modulo_actual, 'submodulos': submodulos_actual})
+            modulo_actual = resultado.modulo_id
+            submodulos_actual = []
+        
+        submodulos_actual.append({'nombre': resultado.submodulo_nombre, 'id': resultado.submodulo_id})
+
+    if modulo_actual is not None:
+        resultado_final.append({'modulo': modulo_actual, 'submodulos': submodulos_actual})
+
+    return render_template("modulos.html")
+
+
+
+
+
+
+
+
 
