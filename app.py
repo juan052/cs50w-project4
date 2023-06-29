@@ -1322,11 +1322,40 @@ def eliminar_cliente():
     
     return redirect('/clientes')
 
-@app.route('/personalizaciones', methods=['POST'])
+@app.route('/personalizacion', methods=['POST'])
+def personalizacion():
+    cliente_id = request.form.get('cliente_id')
+    descripcion = request.form.get('descripcion')
+    presupuesto = request.form.get('presupuesto')
+    foto = request.files['foto']
+
+    print(f'Cliente ID: {cliente_id}')
+    print(f'Descripción: {descripcion}')
+    print(f'Presupuesto: {presupuesto}')
+    print(f'Foto: {foto.filename}')
+
+    logo = None
+    if 'foto' in request.files:
+        logo = request.files['foto']
+        if logo:
+            filename = str(uuid.uuid4()) + secure_filename(logo.filename)
+            logo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            logo = filename
+    
+    personalizacion=Personalizacion(id_cliente=cliente_id,descripcion=descripcion,fotos=logo,presupuesto=presupuesto,estado=0)
+    db.session.add(personalizacion)
+    db.session.commit()
+    return jsonify({
+        'descripcion': descripcion,
+        'presupuesto': presupuesto,
+        'cliente_id': cliente_id,
+        # Agrega aquí los demás campos que desees devolver
+    })
+
+
+
+@app.route('/personalizaciones', methods=['POST','GET'])
 def personalizaciones():
-    return render_template("personalizacion.html")
-
-
-
-
+    pedido=Personalizacion.query.all()
+    return render_template("personalizacion.html",pedido=pedido)
 
