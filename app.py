@@ -4,7 +4,6 @@ import random
 import string
 import requests
 import uuid
-import pywhatkit 
 import time
 from flask import Flask, session, redirect, url_for, render_template, request, flash,jsonify
 from werkzeug.utils import secure_filename
