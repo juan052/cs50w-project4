@@ -4,6 +4,8 @@ import random
 import string
 import requests
 import uuid
+import pywhatkit 
+import time
 from flask import Flask, session, redirect, url_for, render_template, request, flash,jsonify
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
@@ -17,6 +19,8 @@ from helper import *
 from helper1 import *
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import exists, not_
+from twilio.rest import Client
+
 app = Flask(__name__)
 
 # Check for environment variable
@@ -32,6 +36,10 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'ingsoftwar123@gmail.com'
 app.config['MAIL_PASSWORD'] = 'uwyzadkpqxkxzhvr'
 app.secret_key = 'tu_clave_secreta'
+account_sid = 'AC4758eb208264635a3c58aa454bd39dde'
+auth_token = '5795809fa88e649a310bd23103afbbd0'
+client = Client(account_sid, auth_token)
+
 mail = Mail(app)
 Session(app)
 db.init_app(app)
@@ -107,7 +115,10 @@ def shop():
     else:
         # La sesión existe
         Precios=Precio.query.options(joinedload(Precio.producto)).all()
-        return render_template('shop.html', Precios=Precios,usuario=usuario)
+        cliente_id = session.get('cliente_id')
+        cantidad = Personalizacion.query.filter(Personalizacion.estado == 2, Personalizacion.id_cliente == cliente_id).count()
+        confirmar = DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 2).all()
+        return render_template('shop.html', Precios=Precios,usuario=usuario, confirmar=confirmar, cantidad=cantidad)
     
    
 
@@ -1357,9 +1368,15 @@ def personalizacion():
 @app.route('/personalizaciones', methods=['POST','GET'])
 @login_required
 def personalizaciones():
-    pedido=Personalizacion.query.all()
+    cantidad_pedidos = Personalizacion.query.filter(Personalizacion.estado == 0).count()
+    pedido=Personalizacion.query.filter(Personalizacion.estado == 0).all()
+    rechazados=Personalizacion.query.filter(Personalizacion.estado == 1).all()
+    enviados=DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 2).all()
+    detalle_pedidos = DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 3).all()
+
+
    
-    return render_template("personalizacion.html",pedido=pedido)
+    return render_template("personalizacion.html",pedido=pedido, cantidad_pedidos=cantidad_pedidos,rechazados=rechazados,detalle_pedidos=detalle_pedidos,enviados=enviados)
 
 
 
@@ -1389,8 +1406,81 @@ def obtener_modulos_con_submodulos():
     return render_template("modulos.html")
 
 
+@app.route("/detalle_pedidos",methods=["GET","POST"])
+def detalle_pedidos():
+    if request.method == "POST":
+        id=request.form.get('id')
+        personalizacion=Personalizacion.query.get(id)
+        nombre=personalizacion.cliente.persona.nombre
+        correo=personalizacion.cliente.persona.correo
+        numero=personalizacion.cliente.persona.celular
+        estado=request.form.get("estado")
+        
+        costo_total=request.form.get("costo_total")
+        nota=request.form.get("nota")
+        fecha_entrega=request.form.get("fecha_entrega")
+        if int(estado) == 1:
+          
+            personalizacion.estado=1
+            db.session.add(personalizacion)
+            db.session.commit()
+            cuerpo = '''
+            Estimado(a) {0},
+
+            Lamentamos informarte que no podemos aceptar tu pedido en este momento. No contamos con los elementos o servicios que has solicitado. Nos disculpamos por cualquier inconveniente que esto pueda haber causado.
+            Entendemos que este contratiempo puede ser frustrante, y nos gustaría asegurarte que tomamos en cuenta todas las solicitudes de nuestros clientes de manera cuidadosa. Sin embargo, en esta ocasión no podemos cumplir con tu pedido debido a limitaciones de inventario o capacidad.
+            Apreciamos tu interés en nuestros productos/servicios y nos encantaría poder ayudarte en el futuro. Si tienes alguna otra consulta o necesitas asistencia adicional, no dudes en contactarnos. Estaremos encantados de brindarte cualquier información que necesites.
+            Nuevamente, lamentamos los inconvenientes causados y agradecemos tu comprensión.
+            Atentamente, Luxx ART '''.format(nombre)
+            msg = Message('Resultado de solicitud de pedido', sender='ingsoftwar123@gmail.com', recipients=[correo])
+            msg.body = cuerpo
+            mail.send(msg)
+            flash("Se ha rechazado el pedido personalizado con exito","success")
+
+            return redirect('/personalizaciones')
+        else :
+            personalizacion.estado=2
+            db.session.add(personalizacion)
+            db.session.commit()
+            detalle=DetallePersonalizacion(id_personalizacion=id, costo_total=costo_total, nota=nota, fecha_entrega=fecha_entrega)
+            db.session.add(detalle)
+            db.session.commit()
+            mensaje=f'''Estimado(a) {nombre},
+
+            Nos complace informarte que tu pedido ha sido aceptado. A continuación, te proporcionamos los detalles de tu pedido:
+            -Acerca de tu pedido:{nota}.
+            -Total del va lor del pedido: {costo_total} Esto no incluye costo de envio.
+            -Fecha de entrega: {fecha_entrega}.
+            Para confirmar tu pedido y acceder a la confirmación, sigue estos pasos:
+
+            1) Inicia sesión en tu cuenta en nuestro sitio web.
+            2) Haz clic en el siguiente enlace para acceder a la confirmación: [URL del proyecto Flask]/confirmacion
+            Recuerda que debes iniciar sesión en tu cuenta antes de hacer clic en el enlace.
+
+            Si tienes alguna pregunta o necesitas ayuda adicional, no dudes en contactarnos. ¡Estamos aquí para asistirte!
+
+            ¡Gracias y que tengas un excelente día!
+
+            Atentamente,
+            Luxx Art'''
+            flash("Se ha enviados los detalles del pedido al cliente","success")
+            msg = Message('Resultado de solicitud de pedido', sender='ingsoftwar123@gmail.com', recipients=[correo])
+            msg.body = mensaje
+            mail.send(msg)
+            
+            return redirect('/personalizaciones')
+                            
+    return redirect("/personalizaciones")
 
 
+@app.route("/confirmar",methods=["GET","POST"])
+@login_requirede
+def confirmar():
+    
+    return redirect('/shop')
+   
+
+  
 
 
 

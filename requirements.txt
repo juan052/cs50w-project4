@@ -21,3 +21,4 @@ urllib3==2.0.2
 Werkzeug==2.2.3
 Gunicorn
 Flask-Mail
+twilio
