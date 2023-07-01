@@ -1,6 +1,7 @@
 import os
-from datetime import datetime
+from datetime import datetime, date
 import random
+from decimal import Decimal
 import string
 import requests
 import uuid
@@ -10,7 +11,7 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_session import Session
-from sqlalchemy import create_engine, text, not_,and_
+from sqlalchemy import create_engine, text, not_,and_, func
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_sqlalchemy import SQLAlchemy
 from models import *
@@ -113,11 +114,12 @@ def shop():
         return render_template('index.html', Precios=Precios)
     else:
         # La sesión existe
-        Precios=Precio.query.options(joinedload(Precio.producto)).all()
+        Precios = Precio.query.join(Precio.producto).filter(Producto.cantidad > 0).options(joinedload(Precio.producto)).all()
         cliente_id = session.get('cliente_id')
         cantidad = Personalizacion.query.filter(Personalizacion.estado == 2, Personalizacion.id_cliente == cliente_id).count()
-        confirmar = DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 2).all()
-        return render_template('shop.html', Precios=Precios,usuario=usuario, confirmar=confirmar, cantidad=cantidad)
+        confirmar = DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 2, Personalizacion.id_cliente == cliente_id).all()
+        
+        return render_template('shop.html', Precios=Precios,usuario=usuario, cantidad=cantidad, confirmar=confirmar)
     
    
 
@@ -450,7 +452,7 @@ def actualizar_trabajador(id):
     trabajador = Trabajador.query.get_or_404(id)
     persona = Persona.query.get_or_404(trabajador.id_persona)
     personanat = PersonaNatural.query.get_or_404(trabajador.id_persona)
-
+    print(personanat)
     if request.method == "POST":
         nombre = request.form.get('nombre')
         apellido = request.form.get('apellido')
@@ -479,15 +481,23 @@ def actualizar_trabajador(id):
         persona.correo = correo
         persona.direccion = direccion
         persona.celular = celular
-
+        db.session.add(persona)
+        db.session.commit()
+        print(apellido)
+        print(cedula)
+        print(fecha)
+        print(genero)
+        
         personanat.apellido = apellido
         personanat.cedula = cedula
         personanat.fecha_nacimiento = fecha
         personanat.genero = genero
+        db.session.add(personanat)
+        db.session.commit()
 
         trabajador.foto = logo
         trabajador.estado = estado
-
+        db.session.add(trabajador)
         db.session.commit()
         flash("Se ha actualizado correctamente el colaborador","success")
         return redirect(url_for('trabajador'))
@@ -860,12 +870,18 @@ def obtener_productos():
         lista_productos.append({
             'id': producto.id,
             'nombre': producto.nombre,
+            'cantidad':producto.cantidad,
             'precio': precio_actual,
             'logo': producto.logo
         })
     
     return lista_productos
 
+def obtener_cantidad_en_carrito(carrito, producto_id):
+    for item in carrito:
+        if item['id'] == producto_id:
+            return item['cantidad']
+    return 0
 
 
 @app.route('/agregar', methods=['POST'])
@@ -879,20 +895,34 @@ def agregar():
             producto_id = int(key.split('_')[2])  # Obtener el ID del producto del nombre de la clave
             cantidad_key = 'cantidad_' + str(producto_id)  # Construir la clave específica de cantidad
             cantidad = int(request.form.get(cantidad_key, 1))
-            
-            for item in carrito:
-                if item['id'] == producto_id:
-                    item['cantidad'] += cantidad
-                    break
-            else:
-                producto = {'id': producto_id, 'cantidad': cantidad}
-                carrito.append(producto)
-                break  # Agrega el producto y sale del bucle principal
+            try:
+                producto = Producto.query.get(producto_id)
+                print("Producto:", producto)
+            # Validar la cantidad disponible del producto
+                producto = Producto.query.get(producto_id)
+                print("--------------------------------------")
+                print("xd"+str(producto.cantidad))
+                cantidad_carrito = obtener_cantidad_en_carrito(carrito, producto_id)
+
+                if producto and int(producto.cantidad) >= (int(cantidad) + cantidad_carrito):
+                    for item in carrito:
+                        if item['id'] == producto_id:
+                            item['cantidad'] += cantidad
+                            break
+                    else:
+                        producto = {'id': producto_id, 'cantidad': cantidad}
+                        carrito.append(producto)
+                        break  # Agrega el producto y sale del bucle principal
+                else:
+                    flash("Haz alcanzado el maximo de cantidad para este producto","info")
+                    return redirect('/shop')
+            except Exception as e:
+                return jsonify({'message': 'Error al obtener el producto', 'error': str(e)}), 500
+   
     print("Carrito actualizado:", carrito)
     session['carrito'] = carrito
+    flash("Producto agregado al carrito", "success")
     return redirect('/shop')
-
-
 
 
 
@@ -904,6 +934,8 @@ def card():
     productos = obtener_productos()
 
     carrito_actualizado = []
+    total_carrito = 0  # Variable para almacenar el total del carrito
+
     for item in carrito:
         for producto in productos:
             if producto['id'] == item['id']:
@@ -915,11 +947,17 @@ def card():
                     'cantidad': item['cantidad'] 
                 }
                 carrito_actualizado.append(item_actualizado)
+
+                subtotal = item['cantidad'] * producto['precio']
+                total_carrito += subtotal  # Sumar al total del carrito
+
                 break
 
-     # Guardar los detalles de la venta en la sesión
+    # Guardar los detalles de la venta en la sesión
     session['detalles_venta'] = carrito_actualizado
-    return render_template("card.html", carrito=carrito_actualizado)
+
+    return render_template("card.html", carrito=carrito_actualizado, total_carrito=total_carrito)
+
 
 
 
@@ -995,43 +1033,56 @@ def registrase():
 
 @app.route('/guardar_venta', methods=['POST'])
 def guardar_venta():
-    id_tipo = request.form.get('id_tipo')
-    id_cliente = session['cliente_id']
-    fecha = request.form.get('fecha')
-    estado = request.form.get('estado')
-    fecha_actual = datetime.now()
-    fecha_postgresql = fecha_actual.strftime('%Y-%m-%d')
-    venta = Venta(id_tipo=1, id_cliente=id_cliente, fecha=fecha_postgresql, estado=1)
-    db.session.add(venta)
-    db.session.commit()   
-    detalles = session.get('detalles_venta', [])
-    for detalle in detalles:
-        id_producto = detalle['id']
-        subtotal = detalle['precio'] * detalle['cantidad']
-        descuento = 0
-        total = subtotal - descuento
-        detalle_venta = DetalleVenta(id_venta=venta.id, id_producto=id_producto, subtotal=subtotal, descuento=descuento, total=total)
-        db.session.add(detalle_venta)
+    if request.method == "POST":
+        id_tipo = request.form.get('id_tipo')
+        id_cliente = session['cliente_id']
+        fecha = request.form.get('fecha')
+        estado = request.form.get('estado')
+        fecha_actual = datetime.now()
+        fecha_postgresql = fecha_actual.strftime('%Y-%m-%d')
+        ultima_venta = Venta.query.order_by(Venta.id.desc()).first()
+        print(ultima_venta)
+        if ultima_venta:
+            id_venta=ultima_venta.id +1
+        else:
+            id_venta = 1
+
+        codigo = "V-00" + str(id_venta) 
+        data = request.form 
+        
+        print(data)
+        tipo_entrega=data.get('tipo-entrega')
+        estado=data.get('estado')
+        print(tipo_entrega)
+        print(estado)
+        venta = Venta(id_tipo=1, id_cliente=id_cliente, fecha=fecha_postgresql,codigo=codigo,tipo_entrega=tipo_entrega, estado=estado)
+        db.session.add(venta)
+        db.session.commit()   
+        
     
-    db.session.commit()
-      # Eliminar el carrito de la sesión
-    session.pop('carrito', None)
+        detalles = session.get('detalles_venta', [])
+        for detalle in detalles:
+            id_producto = detalle['id']
+            subtotal = detalle['precio'] * detalle['cantidad']
+            descuento = 0
+            total = subtotal - descuento
+            detalle_venta = DetalleVenta(id_venta=venta.id, id_producto=id_producto, subtotal=subtotal, descuento=descuento, total=total)
+            db.session.add(detalle_venta)
+        
+        db.session.commit()
+        for detalle in detalles:
+            producto = Producto.query.get(detalle['id'])
+            producto.cantidad -= detalle['cantidad']
+            db.session.add(producto)
+
+        db.session.commit()
+        # Eliminar el carrito de la sesión
+        session.pop('carrito', None)
+        flash("Pedido ordenado existosamente", "success")
+        return redirect('/shop')
+
     return redirect('/shop')
     
-
-
-@app.route('/ventas', methods=['GET'])
-@login_required
-def ventas():
-    # Obtener todos los registros de los modelos
-    ventas = Venta.query\
-    .options(joinedload(Venta.tipo_venta), joinedload(Venta.cliente).joinedload(Cliente.persona))\
-    .all()
-
-# Pasar los datos a la plantilla
-    return render_template('venta.html', ventas=ventas)
-
-
 
 @app.route('/admin',methods=["GET"])
 @login_required
@@ -1472,16 +1523,209 @@ def detalle_pedidos():
     return redirect("/personalizaciones")
 
 
-@app.route("/confirmar",methods=["GET","POST"])
+@app.route("/confirmar/<int:id>", methods=["POST","GET"])
 @login_requirede
-def confirmar():
-    
+def confirmar(id):
+    if request.method == "GET":
+        confirmar = DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 2, Personalizacion.id == id).first()
+        cliente=confirmar.personalizacion.cliente.persona.nombre
+        print(cliente)
+        return render_template("confirmar.html", confirmar=confirmar)
+    if request.method == "POST":
+        id_personalizacion = request.form.get('id')
+        estado = int(request.form.get('estado'))
+        personalizacion = Personalizacion.query.get(id_personalizacion)
+        print(id_personalizacion)
+        if personalizacion is not None:
+            # Realiza las acciones necesarias con la personalización
+            # según si se acepta o se rechaza
+            print(estado)
+            if  estado == 3:
+                # Acciones cuando se acepta
+                personalizacion.estado = 3
+                db.session.add(personalizacion)
+                db.session.commit()
+                flash('La confirmación se ha realizado correctamente.', 'success')
+                return redirect('/shop')
+            elif estado == 4:
+                # Acciones cuando se rechaza
+                personalizacion.estado = 4
+                db.session.add(personalizacion)
+                db.session.commit()
+                flash('La confirmación se ha realizado correctamente.', 'success')
+                return redirect('/shop')
+
+       
+           
+        else:
+            print("No se realizo nada")
+            flash('No se encontró la personalización solicitada.', 'error')
+            return redirect('/shop')
+
     return redirect('/shop')
+
+@app.route("/terminar_pedido",methods=["GET","POST"])
+def terminar_pedidos():
+    if request.method == "POST":
+        id=request.form.get('id')
+        personalizaciones=DetallePersonalizacion.query.get(id)
+        
+        estado=request.form.get("estado") 
+        personalizaciones.personalizacion.estado=estado
+        db.session.add(personalizaciones)
+        db.session.commit()
+        flash("Se ha confirmado la culminicacion del pedido","success")
+        return redirect('/personalizaciones')
+                            
+    return redirect("/personalizaciones")
+
+
+
+
+@app.route('/ventas', methods=['GET'])
+@login_required
+def ventas():
+    # Obtener todos los registros de los modelos
+    ventas = Venta.query \
+    .options(joinedload(Venta.tipo_venta), joinedload(Venta.cliente).joinedload(Cliente.persona)) \
+    .filter(Venta.estado != 1) \
+    .all()
+
+    # Obtener todas las ventas con detalles de productos
+    ventas_productos = DetalleVenta.query.options(joinedload(DetalleVenta.venta)).all()
+    ventass = DetalleVenta.query.join(DetalleVenta.venta).filter(Venta.estado == 1).options(joinedload(DetalleVenta.venta)).all()
+
+    # Obtener todas las ventas con detalles de personalizaciones
+    ventas_personalizaciones = VentaPersonalizacion.query.options(joinedload(VentaPersonalizacion.venta)).all()
+
+    confirmar = DetallePersonalizacion.query.join(DetallePersonalizacion.personalizacion).filter(Personalizacion.estado == 5).all()
+    ventas_productos = (
+        db.session.query(Venta, func.string_agg(DetalleVenta.id.cast(db.String), ',').label('detalle_ids'))
+        .join(DetalleVenta.venta)
+        .filter(Venta.estado == 1)
+        .group_by(Venta)
+        .all()
+    )
+    ventas_con_productos = []
+    for venta, detalle_ids in ventas_productos:
+        detalle_ids = [int(id) for id in detalle_ids.split(",")]
+        detalles_venta = DetalleVenta.query.filter(DetalleVenta.id.in_(detalle_ids)).all()
+        subtotal_venta = 0
+
+        for detalle in detalles_venta:
+            subtotal_venta += detalle.subtotal
+
+        ventas_con_productos.append({
+            'venta': venta,
+            'detalles_venta': detalles_venta,
+            'subtotal_venta': subtotal_venta
+        })
+
    
 
-  
+      
 
 
+    return render_template('venta.html', ventas=ventas,ventas_personalizaciones=ventas_personalizaciones, ventas_productos=ventas_productos,confirmar=confirmar,ventas_con_productos=ventas_con_productos)
 
 
+@app.route('/crear_venta_pedido', methods=['GET','POST'])
+@login_required
+def crear_venta_pedido():
+    if request.method == "POST":
+        id=request.form.get('id')
+        id_cliente= request.form.get('id_cliente')
+        costo_total=request.form.get('costo_total')
+        descuento=request.form.get('descuento')
+        ultima_venta = Venta.query.order_by(Venta.id.desc()).first()
+        print(ultima_venta)
+        fecha_actual = date.today()
+        total  = float(costo_total) - float(descuento)
+        pedido=Personalizacion.query.get(id)
+        pedido.estado=6
+        db.session.add(pedido)
+        db.session.commit()
+        # Formatear la fecha actual en el formato para PostgreSQL
+        fecha = fecha_actual.strftime('%Y-%m-%d')
+        if ultima_venta:
+            id_venta=ultima_venta.id +1
+        else:
+            id_venta = 1
+
+        codigo = "V-00" + str(id_venta) 
+        venta= Venta(id_cliente=id_cliente,id_tipo=2,fecha=fecha,codigo=codigo,tipo_entrega="metro",estado=2)
+        db.session.add(venta)
+        db.session.commit()
+        ultimo_id = venta.id
+
+        detalle_venta=VentaPersonalizacion(id_venta=ultimo_id,id_personalizacion=id,subtotal=costo_total,descuento=descuento,total=total)
+        db.session.add(detalle_venta)
+        db.session.commit()
+        flash("Se ha realizado la venta","success")
+        return redirect('/ventas')
+    
+    return redirect('ventas')
+def calcular_total_con_descuento(subtotal, descuento):
+    subtotal = Decimal(subtotal)
+    descuento = Decimal(descuento)
+    total = subtotal - descuento
+    return total
+
+@app.route('/crear_venta_pedidos', methods=['GET','POST'])
+@login_required
+def crear_venta_pedidos():
+    if request.method == "POST":
+        id=request.form.get('id')
+        descuento=request.form.get('descuento')
+        venta=Venta.query.get(id)
+        venta.estado=2
+        db.session.add(venta)
+        db.session.commit()
+
+        detalles_venta = DetalleVenta.query.filter_by(id_venta=id).all()
+        for detalle in detalles_venta:
+            detalle.descuento = descuento
+            detalle.total = calcular_total_con_descuento(detalle.subtotal, descuento)  # Aquí debes implementar tu lógica para calcular el total con descuento
+            db.session.add(detalle)
+
+        db.session.commit()
+
+      
+
+
+        flash("Se ha realizado la venta","success")
+        return redirect('/ventas')
+    
+    return redirect('ventas')
+
+
+@app.route('/completar', methods=['GET','POST'])
+@login_required
+def completar():
+    if request.method == "POST":
+        id=request.form.get('id')
+       
+        venta=Venta.query.get(id)
+        venta.estado=3
+        db.session.add(venta)
+        db.session.commit()
+        flash("Se ha realizado la venta","success")
+        return redirect('/ventas')
+    
+    return redirect('ventas')
+
+@app.route('/anular', methods=['GET','POST'])
+@login_required
+def anular():
+    if request.method == "POST":
+        id=request.form.get('id')
+       
+        venta=Venta.query.get(id)
+        venta.estado=4
+        db.session.add(venta)
+        db.session.commit()
+        flash("Se ha realizado la venta","success")
+        return redirect('/ventas')
+    
+    return redirect('ventas')
 

@@ -22,10 +22,25 @@
 			href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css">
 		<script
 			src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
-
+			<link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.6/flowbite.min.css" rel="stylesheet" />
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.6/flowbite.min.js"></script>
 	</head>
 	<body>
 
+		{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <script>
+              Swal.fire(
+                '{{ category }}!',
+                '{{ message }}',
+                '{{ category.lower() }}'
+              );
+            </script>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+  
 		<!----header section design---->
 		<header>
 			<a href="/" class="logo"><img src="/static/img/5.png" style="width: 10%;"></a>
@@ -54,6 +69,7 @@
 				</div>
 			</div>
 		</header>
+		
 
 		<!----home section design---->
 		<section class="home">
@@ -71,9 +87,11 @@
 		<section class="product">
 			<div class="middle-text">
 				<h2>Confirma tu pedidos.</h2>
-				<a href="" class="btn">Respuesta</a>
+			 {% for  detalle in confirmar%}
+				<a href="/confirmar/{{detalle.id_personalizacion}}" class="btn">Respuesta</a>
+
+			{%endfor%}
 			</div>
-			
 		</section>
 		{% endif %}
 		<section class="product">
@@ -219,7 +237,9 @@
 			  total.textContent = totalCompra.toFixed(2);
 			}
 		</script>
+		
 		<script>
+
 			document.getElementById('openDialogButton').addEventListener('click', async function() {
 				const steps = ['1', '2', '3'];
 				const swalQueueStep = Swal.mixin({
@@ -294,5 +314,82 @@
 				}
 			});
 		</script>
+
+<script>
+
+	document.getElementById('openDialogButton1').addEventListener('click', async function() {
+		const steps = ['1', '2', '3'];
+		const swalQueueStep = Swal.mixin({
+			confirmButtonText: 'Continuar',
+			cancelButtonText: 'Atras',
+			progressSteps: steps,
+			input: 'text',
+			inputAttributes: {
+			required: true
+			},
+			reverseButtons: true,
+			validationMessage: 'Este campo son requeridos'
+		});
+
+		const values = [];
+		let currentStep;
+
+		for (currentStep = 0; currentStep < steps.length;) {
+			let inputType = 'text';
+			let inputText = '';
+
+			if (currentStep === 0) {
+			inputType = 'textarea';
+			inputText = 'Describe tu pedido';
+			} else if (currentStep === 1) {
+			inputType = 'number';
+			inputText = 'Ingresa tu presupuesto';
+			} else if (currentStep === 2) {
+			inputType = 'file';
+			inputText = 'Sube tus fotos de inspiración(* Obligatorio *)';
+			}
+
+			const result = await swalQueueStep.fire({
+			title: `Pregunta ${steps[currentStep]}`,
+			text: inputText,
+			input: inputType,
+			inputValue: values[currentStep],
+			showCancelButton: currentStep > 0,
+			currentProgressStep: currentStep
+			});
+
+			if (result.value) {
+			values[currentStep] = result.value;
+			currentStep++;
+			} else if (result.dismiss === Swal.DismissReason.cancel) {
+			currentStep--;
+			} else {
+			break;
+			}
+		}
+
+		if (currentStep === steps.length) {
+			const formData = new FormData();
+			formData.append('cliente_id', '{{ session["cliente_id"] }}');
+			formData.append('descripcion', values[0]);
+			formData.append('presupuesto', values[1]);
+			formData.append('foto', values[2]);
+
+			fetch('/personalizacion', {
+			method: 'POST',
+			body: formData
+			})
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+				Swal.fire('Success', 'Los datos han sido enviados correctamente', 'success');
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				Swal.fire('Error', 'Ocurrió un error al enviar los datos', 'error');
+			});
+		}
+	});
+</script>
 	</body>
 </html>

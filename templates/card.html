@@ -6,6 +6,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" type="image/png" href="/static/img/2.png">
         <title>Luxx Art</title>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.6/flowbite.min.css"
+            rel="stylesheet" />
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.6/flowbite.min.js"></script>
 
         <link
             href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
@@ -89,7 +94,7 @@ body{
 	padding: 14px 11%;
 }
         </style>
-        <header>
+        <header style="background-color: white;">
             <ul class="navbar1">
                 <li><a href="/shop" class="active">Seguir comprando</a></li>
             </ul>
@@ -108,107 +113,97 @@ body{
                 </div>
             </div>
         </header>
-        <!----home section design---->
-
-        <div class="container" style="margin-top: 8%;">
-            <div class="row">
-                <div class="col-md-6">
-                    <h1 class="mb-4">Factura</h1>
+        <div class="container mx-auto mt-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h1 class="mb-4">Orden de pedido</h1>
+                    <h5 class="mb-2">Hola,</h5>
+                    <p class="text-lg text-gray-700" id="cliente">{{ session["cliente_nombre"] }}</p>
                 </div>
-                <div class="col-md-6 text-end">
-                    <h5>Fecha: <span id="fecha">06/06/2023</span></h5>
-                    <h5>Número de factura: <span id="numero-factura">12345</span></h5>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <h5>Cliente:</h5>
-                    <p id="cliente">{{ session["cliente_nombre"] }}</p>
-                </div>
-                <div class="col-md-6">
-                    <h5>Dirección:</h5>
-                    <p id="direccion">{{ session["cliente_direccion"] }}</p>
+                <div class="text-right">
+                    <h5>Fecha: <span id="fecha"></span></h5>
                 </div>
             </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <h5>Correo electrónico:</h5>
-                    <p id="correo">{{ session["cliente_correo"] }}</p>
-                </div>
-                <div class="col-md-6">
-                    <h5>Teléfono:</h5>
-                    <p id="telefono">{{ session["cliente_celular"] }}</p>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <h5>Tipo de entrega:</h5>
-                    <select name="tipo-entrega" id="tipo-entrega"
-                        class="form-control">
-                        <option value="metro">Metro</option>
-                        <option value="grandana">Grandana</option>
-                        <option value="masaya">Masaya</option>
-                        <option value="uca">UCA</option>
-                        <option value="uni">UNI</option>
-                        <option value="envio">Envío por correo</option>
-                    </select>
-                </div>
-                <form action="/guardar_venta" method="POST" id="formulario-venta">
-                    <input type="hidden" name="id_tipo" value="1"> <!-- Reemplaza el valor con el ID correcto del tipo de venta -->
-                    <input type="hidden" name="id_cliente" value="{{ session['cliente_id'] }}"> <!-- Obtén el ID del cliente desde la sesión -->
-                    <input type="hidden" name="fecha" value="{{ session['fecha'] }}"> <!-- Obtén la fecha desde la sesión -->
-                    <input type="hidden" name="estado" value="1"> <!-- Reemplaza el valor con el estado correcto de la venta -->
-                    
-                    <!-- Resto de los campos del formulario -->
-                    
-                    <div class="col-md-6">
-                        <label for=""></label>
-                        <button class="btn btn-success" type="submit">Terminar pedido</button>
+        
+            <script>
+                var fechaActual = new Date();
+                var dia = fechaActual.getDate();
+                var mes = fechaActual.getMonth() + 1; // Los meses en JavaScript van de 0 a 11
+                var anio = fechaActual.getFullYear();
+                var fechaActualString = dia + "/" + mes + "/" + anio;
+                document.getElementById("fecha").textContent = fechaActualString;
+            </script>
+        
+            <form action="/guardar_venta" method="POST" id="formulario-venta">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <h5>Correo electrónico:</h5>
+                        <input class="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" name="correo" id="correo" value="{{ session["cliente_correo"] }}" disabled>
                     </div>
-                </form>
-
-            </div>
-
-            <table class="table table-bordered mt-4">
+                    <div>
+                        <h5>Tipo de entrega:</h5>
+                        <select name="tipo-entrega" id="tipo-entrega" class="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="metro">Metro</option>
+                            <option value="grandana">Grandana</option>
+                            <option value="masaya">Masaya</option>
+                            <option value="uca">UCA</option>
+                            <option value="uni">UNI</option>
+                            <option value="envio">Envío por correo</option>
+                        </select>
+                    </div>
+                    <input type="text" name="estado" value="1" hidden>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <h5>Teléfono:</h5>
+                        <input class="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" name="telefono" value="{{ session["cliente_celular"] }}" disabled>
+                    </div>
+                    <!-- Resto de los campos del formulario -->
+                    {% if carrito %}
+                    <div class="flex items-end justify-end">
+                        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" type="submit">Terminar pedido</button>
+                    </div>
+                    {% endif %}
+                </div>
+                
+            </form>
+        
+            <table class="table-auto w-full mt-4">
                 <thead>
                     <tr>
-                        <th>Producto</th>
-                        <th>Foto</th>
-                        <th>Cantidad</th>
-                        <th>Precio</th>
-                        <th>Sub total</th>
-                        <th>Action</th>
+                        <th class="px-4 py-2">Producto</th>
+                        <th class="px-4 py-2">Foto</th>
+                        <th class="px-4 py-2">Cantidad</th>
+                        <th class="px-4 py-2">Precio</th>
+                        <th class="px-4 py-2">Sub total</th>
+                        <th class="px-4 py-2">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in carrito %}
                     <tr>
-                        <td>{{ item.nombre }}</td>
-                        <td><img src="/static/img/imagenes/{{ item.logo }}" alt
-                                width="50"></td>
-                        <td><input type="number" id="cantidad-input"
-                                value="{{ item.cantidad }}"
-                                class="form-control cantidad-input" min="1"></td>
-                        <td>{{ item.precio }}</td>
-                        <td><span class="subtotal" id="subtotal{{ loop.index }}">{{
-                                item.precio * item.cantidad }}</span></td>
-                        <td><a href="/eliminar/{{ item.id }}" class="btn">Eliminar</a></td>
+                        <td class="px-4 py-2">{{ item.nombre }}</td>
+                        <td class="px-4 py-2"><img src="/static/img/imagenes/{{ item.logo }}" alt width="50"></td>
+                        <td class="px-4 py-2">{{ item.cantidad }}</td>
+                        <td class="px-4 py-2">{{ item.precio }}</td>
+                        <td class="px-4 py-2"><span class="subtotal" id="subtotal{{ loop.index }}">{{ item.precio * item.cantidad }}</span></td>
+                        <td class="px-4 py-2"><a href="/eliminar/{{ item.id }}" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Eliminar</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-
-            <div class="row mt-4">
-                <div class="col-md-6 offset-md-6 text-end">
+        
+            <div class="grid grid-cols-1 md:grid-cols-2 mt-4">
+                <div class="text-left">
                     <h5>Total:</h5>
-                    <h2 id="total" class="fw-bold">c$ 0.00</h2>
+                </div>
+                <div class="text-right">
+                    <h2 id="total" class="font-bold">c$ {{total_carrito}}</h2>
                 </div>
             </div>
         </div>
-
+        
         <section class="contact">
             <div class="main-contact">
                 <div class="contact-content">
@@ -249,51 +244,6 @@ body{
 
         <script src="https://unpkg.com/scrollreveal"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-        <script>
-
-$(document).ready(function() {
-  // Obtener todos los elementos con la clase 'cantidad-input'
-  $('.cantidad-input').change(function() {
-    var row = $(this).closest('tr'); // Obtener la fila actual
-    var precio = parseFloat(row.find('td:nth-child(4)').text()); // Obtener el precio
-    var cantidad = parseInt($(this).val()); // Obtener la cantidad ingresada
-
-    // Calcular el sub total y actualizar el valor
-    var subtotal = precio * cantidad;
-    row.find('.subtotal').text(subtotal.toFixed(2));
-
-    // Calcular el total sumando los subtotales de todas las filas
-    var total = 0;
-    $('.subtotal').each(function() {
-      total += parseFloat($(this).text());
-    });
-
-    // Mostrar el total
-    $('#total').text(total.toFixed(2));
-  });
-});
-
-        </script>
-<script>
-    document.getElementById('formulario-venta').addEventListener('submit', function(e) {
-        e.preventDefault(); // Evita que el formulario se envíe automáticamente
-        
-        // Realiza una solicitud AJAX para enviar el formulario
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/guardar_venta');
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                alert('Venta guardada correctamente');
-            } else {
-                alert('Error al guardar la venta');
-            }
-        };
-        xhr.send(new FormData(this));
-    });
-</script>   
-
 
     </body>
 </html>
