@@ -1504,7 +1504,7 @@ def detalle_pedidos():
             Para confirmar tu pedido y acceder a la confirmación, sigue estos pasos:
 
             1) Inicia sesión en tu cuenta en nuestro sitio web.
-            2) Haz clic en el siguiente enlace para acceder a la confirmación: [URL del proyecto Flask]/confirmacion
+            2) Entra al apartado de productos y te va aparecer  el boton de confirmar
             Recuerda que debes iniciar sesión en tu cuenta antes de hacer clic en el enlace.
 
             Si tienes alguna pregunta o necesitas ayuda adicional, no dudes en contactarnos. ¡Estamos aquí para asistirte!
