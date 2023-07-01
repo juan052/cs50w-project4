@@ -1640,8 +1640,11 @@ def crear_venta_pedido():
         ultima_venta = Venta.query.order_by(Venta.id.desc()).first()
         print(ultima_venta)
         fecha_actual = date.today()
-        total  = float(costo_total) - float(descuento)
+        total  = int(costo_total) - int(descuento)
+        print(id)
         pedido=Personalizacion.query.get(id)
+        print("------------------------------------------")
+        print(pedido)
         pedido.estado=6
         db.session.add(pedido)
         db.session.commit()

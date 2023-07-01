@@ -368,13 +368,13 @@
     </div>
     {% endfor %}
 
-    {%for categoria in pedido%}
-    <div class="modal fade" id="modal-danger{{categoria.id}}">
+    {%for categoria in confirmar%}
+    <div class="modal fade" id="modal-dangers{{categoria.id}}">
         <div class="modal-dialog">
-            <div class="modal-content bg-danger">
-                <form action="/detalle_pedidos" method="post">
+            <div class="modal-content bg-blue">
+                <form action="/crear_venta_pedido" method="post">
                     <div class="modal-header">
-                        <h4 class="modal-title">Rechzar pedido</h4>
+                        <h4 class="modal-title">Crea venta por pedido</h4>
                         <button type="button" class="close"
                             data-dismiss="modal"
                             aria-label="Close">
@@ -383,10 +383,14 @@
                     </div>
                     <div class="modal-body">
                         <input type="text" name="estado" value="1" hidden>
+                        <input type="text" name="id_cliente" value="{{categoria.personalizacion.id_cliente}}" hidden>
                         <input type="text" name="id"
-                            value="{{categoria.id}}"
+                            value="{{categoria.personalizacion.id}}"
                             hidden>
-                        <p>Estas seguro que quieres rechazar el pedido</p>
+                            <input type="text" name="costo_total"
+                            value="{{categoria.costo_total}}"
+                            hidden>
+                       <input type="number" name="descuento" class="form-control">
                     </div>
                     <div class="modal-footer justify-content-between">
                         <button type="button" class="btn btn-outline-light"
