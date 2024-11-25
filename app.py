@@ -33,11 +33,11 @@ app.config['UPLOAD_FOLDER'] = 'static/img/imagenes'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'ingsoftwar123@gmail.com'
-app.config['MAIL_PASSWORD'] = 'uwyzadkpqxkxzhvr'
+app.config['MAIL_USERNAME'] = ''
+app.config['MAIL_PASSWORD'] = ''
 app.secret_key = 'tu_clave_secreta'
-account_sid = 'AC4758eb208264635a3c58aa454bd39dde'
-auth_token = '5795809fa88e649a310bd23103afbbd0'
+account_sid = ''
+auth_token = ''
 client = Client(account_sid, auth_token)
 
 mail = Mail(app)
